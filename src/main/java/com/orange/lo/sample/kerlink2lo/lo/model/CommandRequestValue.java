@@ -1,11 +1,12 @@
 package com.orange.lo.sample.kerlink2lo.lo.model;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class CommandRequestValue {
 
     private String req;
-    private Map<String, String> arg;
+    private Map<String, String> arg = new HashMap<>();
 
     public String getReq() {
         return req;
