@@ -35,60 +35,60 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-
 @RunWith(MockitoJUnitRunner.class)
 public class KerlinkApiTest {
 
     @Mock
     RestTemplate restTemplate;
-    
-    private KerlinkProperties kerlinkProperties;
+
     private KerlinkApi kerlinkApi;
-    
+
     @Before
     public void setUp() {
-        kerlinkProperties = new KerlinkProperties();
+        KerlinkProperties kerlinkProperties = new KerlinkProperties();
         kerlinkProperties.setBaseUrl("localhost");
         kerlinkProperties.setPageSize(10);
-        
+
         kerlinkApi = new KerlinkApi(kerlinkProperties, restTemplate);
     }
-    
+
     @Test
     public void shouldGetAllDevices() {
         // given
         int pageSize = 10;
-        int deviceAmount = 5;        
+        int deviceAmount = 5;
         String url = "localhost/application/endDevices?fields=devEui,devAddr,name,country,status&sort=%2BdevEui&page=1&pageSize=10";
-        ParameterizedTypeReference<PaginatedDto<EndDeviceDto>> returnType = new ParameterizedTypeReference<PaginatedDto<EndDeviceDto>>() {};
-        
+        ParameterizedTypeReference<PaginatedDto<EndDeviceDto>> returnType = new ParameterizedTypeReference<PaginatedDto<EndDeviceDto>>() {
+        };
+
         when(restTemplate.exchange(eq(url), eq(HttpMethod.GET), any(), eq(returnType))).thenReturn(getDevicesResponse(deviceAmount, pageSize));
-        
+
         // when
         List<EndDeviceDto> endDevices = kerlinkApi.getEndDevices();
-        
+
         // then
         Assert.assertEquals(deviceAmount, endDevices.size());
     }
-    
+
     @Test
     public void shouldGetAllDevicesIn2Calls() {
         // given
         int pageSize = 10;
         int firstDeviceAmount = 10;
         int secondDeviceAmount = 5;
-        int nextPage = 2; 
-        
+        int nextPage = 2;
+
         String firstUrl = "localhost/application/endDevices?fields=devEui,devAddr,name,country,status&sort=%2BdevEui&page=1&pageSize=10";
         String secondUrl = "localhost/application/endDevices?fields=devEui,devAddr,name,country,status&sort=%2BdevEui&page=2&pageSize=10";
-        ParameterizedTypeReference<PaginatedDto<EndDeviceDto>> returnType = new ParameterizedTypeReference<PaginatedDto<EndDeviceDto>>() {};
-        
+        ParameterizedTypeReference<PaginatedDto<EndDeviceDto>> returnType = new ParameterizedTypeReference<PaginatedDto<EndDeviceDto>>() {
+        };
+
         when(restTemplate.exchange(eq(firstUrl), eq(HttpMethod.GET), any(), eq(returnType))).thenReturn(getDevicesResponse(firstDeviceAmount, pageSize, nextPage));
         when(restTemplate.exchange(eq(secondUrl), eq(HttpMethod.GET), any(), eq(returnType))).thenReturn(getDevicesResponse(secondDeviceAmount, pageSize));
-        
+
         // when
         List<EndDeviceDto> endDevices = kerlinkApi.getEndDevices();
-        
+
         // then
         Assert.assertEquals(15, endDevices.size());
     }
@@ -98,21 +98,21 @@ public class KerlinkApiTest {
         // given
         String commandId = "123456";
         String token = "abcdef";
-        
+
         DataDownDto dataDownDto = new DataDownDto();
         dataDownDto.setPayload("command");
-        
+
         when(restTemplate.postForEntity(eq("localhost/application/login"), any(), eq(JwtDto.class))).thenReturn(getLoginResponse(token));
-        when(restTemplate.exchange(eq("localhost/application/dataDown"), eq(HttpMethod.POST), eq(getSendCommandHttpEntity(token, dataDownDto)),eq(Void.class))).thenReturn(getCommandResponse(commandId));
-        
+        when(restTemplate.exchange(eq("localhost/application/dataDown"), eq(HttpMethod.POST), eq(getSendCommandHttpEntity(token, dataDownDto)), eq(Void.class))).thenReturn(getCommandResponse(commandId));
+
         // when
         kerlinkApi.login();
         Optional<String> command = kerlinkApi.sendCommand(dataDownDto);
-        
+
         // then
         assertEquals(commandId, command.get());
     }
-    
+
     private HttpEntity<DataDownDto> getSendCommandHttpEntity(String token, DataDownDto dataDownDto) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
@@ -122,16 +122,16 @@ public class KerlinkApiTest {
     }
 
     private ResponseEntity<JwtDto> getLoginResponse(String token) {
-      JwtDto jwtDto = new JwtDto();
-      jwtDto.setToken(token);
-      ResponseEntity<JwtDto> responseEntity = new ResponseEntity<JwtDto>(jwtDto, HttpStatus.CREATED);
-      return responseEntity;
+        JwtDto jwtDto = new JwtDto();
+        jwtDto.setToken(token);
+        ResponseEntity<JwtDto> responseEntity = new ResponseEntity<JwtDto>(jwtDto, HttpStatus.CREATED);
+        return responseEntity;
     }
 
     private ResponseEntity<Void> getCommandResponse(String commandId) throws URISyntaxException {
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(new URI("/application/dataDown/" + commandId));
-        
+
         ResponseEntity<Void> response = new ResponseEntity<Void>(headers, HttpStatus.CREATED);
         return response;
     }
@@ -139,21 +139,21 @@ public class KerlinkApiTest {
     private ResponseEntity<PaginatedDto<EndDeviceDto>> getDevicesResponse(int amount, int pageSize) {
         return getDevicesResponse(amount, pageSize, 0);
     }
-    
+
     private ResponseEntity<PaginatedDto<EndDeviceDto>> getDevicesResponse(int amount, int pageSize, int nextPage) {
         LinkDto linkDto = new LinkDto();
         if (nextPage > 0) {
             linkDto.setRel("next");
-            linkDto.setHref("/application/endDevices?fields=devEui,devAddr,name,country,status&sort=%2BdevEui&page=" + nextPage + "&pageSize=" + pageSize);            
+            linkDto.setHref("/application/endDevices?fields=devEui,devAddr,name,country,status&sort=%2BdevEui&page=" + nextPage + "&pageSize=" + pageSize);
         }
         List<LinkDto> links = Lists.list(linkDto);
-        
+
         List<EndDeviceDto> list = IntStream.rangeClosed(1, amount).mapToObj(i -> new EndDeviceDto()).collect(Collectors.toList());
 
         PaginatedDto<EndDeviceDto> paginatedDto = new PaginatedDto<EndDeviceDto>();
         paginatedDto.setList(list);
         paginatedDto.setLinks(links);
-        
+
         return new ResponseEntity<>(paginatedDto, HttpStatus.OK);
     }
 }

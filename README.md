@@ -5,16 +5,16 @@
 
 ## General info
 ![Architecture](/assets/architecture.png)
-This repository contains everything you need to create 'Kerlink to Live Objects' connector. This connector was designed to synchronize data between Kerlink 'Wanesy Management Center' and Live Objects Platform. Current version of connector allows to make one way synchronization - we can synchronize information from Kerlink to Live Objects.
+This repository contains everything you need to create 'Kerlink to Live Objects' connector. This connector was designed to synchronize data between many Kerlink 'Wanesy Management Center' accounts and Live Objects Platform. Current version of connector allows to make one way synchronization - we can synchronize information from Kerlink to Live Objects.
 
 Three main features are:
 * **devices synchronization** - every device created in Kerlink will appear in LO and every device deleted from Kerlink will be also deleted from LO
 * **messages synchronization** - every message which will be send from device to Kerlink will appear in LO
 * **commands synchronization** - every command created in LO will be sent to Kerlink and status in LO will be updated
 
-One connector can handle one customer (one Kerlink account). If you have more accounts you need to setup one instance of connector per each account. 
+One connector can handle many customers (many Kerlink account).  
 
-It can be only one instance of connector per Kerlink account. Two or more instances connected to to the same Kerlink account will cause problems.
+It can be only one instance of connector. Two or more instances connected to to the same Kerlink accounts will cause problems.
 
 ## Technologies
 * Java 8
@@ -30,71 +30,91 @@ All configuration can be found in **application.yaml** file located in src/main/
  2   port: 8080
  3 spring:
  4   application:
- 5     name: Kerlink2IotHub
+ 5     name: Kerlink2Lo
  6     
- 7 kerlink:
- 8   base-url: _url_
- 9   login: _login_
-10   password: _password_
-11   login-interval: 32400000
-12   page-size: 20
+ 7 lo:
+ 8   api-key: _api_key_
+ 9   api-url: https://liveobjects.orange-business.com/api/
+10   connector-api-key: _connector_api_key_
+11   connector-user: connector
+12   connector-mqtt-url: ssl://liveobjects.orange-business.com:8883
 13   
-14 lo:
-15   api-key: _key_
-16   api-url: https://liveobjects.orange-business.com/api/
-17   connector-api-key: _key_
-18   connector-user: connector
-19   connector-mqtt-url: ssl://liveobjects.orange-business.com:8883
-20   synchronization-device-interval: 10000
-21   synchronization-thread-pool-size: 40
-22   page-size: 20
-23   device-group-name: kerlink
-24   device-prefix: 'urn:lo:nsid:x-connector:'
-25   
-26   message-sender-max-thread-pool-size: 100
-27   message-sender-min-thread-pool-size: 10
-28   message-qos: 1
-29  message-decoder: 
+14   synchronization-device-interval: 10000
+15   synchronization-thread-pool-size: 40
+16   
+17   page-size: 20
+18   device-prefix: 'urn:lo:nsid:x-connector:'
+19   
+20   message-sender-max-thread-pool-size: 100
+21   message-sender-min-thread-pool-size: 10
+22   message-qos: 1
+23   message-decoder: test_csv
+24   
+25 kerlink-list:
+26   -
+27     base-url: https://_your_wmc_host_/gms
+28     login: _kerlink_login_
+29     password: _kerlink_password
+30     login-interval: 32400000
+31     page-size: 20
+32     kerlink-account-name: _kerlink_account_name
+33     
+34   -
+35     base-url: https://_your_wmc_host_/gms
+36     login: _kerlink_login_
+37     password: _kerlink_password
+38     login-interval: 32400000
+39     page-size: 20
+40     kerlink-account-name: _kerlink_account_name    
+
+
 ```
 You can change all values but the most important are:
 
-*2* - Tomcat port
+**2** - Tomcat port
 
-*8* - Kerlink REST API url
+**8** - Live Objects API key with at least DEVICE\_R and DEVICE\_W roles 
 
-*9* -  Kerlink user
+**9** - Live Objects REST API url
 
-*10* -  Kerlink password
+**10** - Live Objects API key with at least CONNECTOR_ACCESS role
 
-*11* -  JWT token you receive after login is valid for 10 hours so we need to refresh this token every some time less than 10 hours. In this example refresh process is executed every 9h * 60m * 60s * 1000 ms = 32400000
+**11** - Do not change it
 
-*12* - Kerlink REST page size (max 1000)
+**12** - Live Objects mqtt url
 
-*15 - Live Objects API key with at least DEVICE\_R and DEVICE\_W roles 
+**14** - Interval between devices synchronization process (in milliseconds)
 
-*16* - Live Objects REST API url
+**15** - How many threads will be used in devices synchronization process
 
-*17* - Live Objects API key with at least CONNECTOR_ACCESS role
+**17** - Live Objects REST page size (max 1000)
 
-*19* - Live Objects mqtt url
+**18** - Do not change it
 
-*20* - Interval between devices synchronization process (in milliseconds)
+**20** - How many threads (at least) will be used in message synchronization process
 
-*21* - How many threads will be used in devices synchronization process
+**21** - How many threads (at most) will be used in message synchronization process
 
-*20* - Live Objects REST page size (max 1000)
+**22** - message QoS
 
-*23* - Device group name. If group name does not exists it will be created
+**23** - Name of Live Objects message decoder. Can be empty but if set it will be applied to all messages from every device
 
-*24* - Do not change it
+**26** - First Kerlink account configuration
 
-*26* - How many threads (at least) will be used in message synchronization process
+**27** - Kerlink REST API url
 
-*27* - How many threads (at most) will be used in message synchronization process
+**28** -  Kerlink user
 
-*28* - message QoS
+**29** -  Kerlink password
 
-*29* - Name of Live Objects message decoder. Can be empty but if set it will be applied to all messages from every device
+**30** -  JWT token you receive after login is valid for 10 hours so we need to refresh this token every some time less than 10 hours. In this example refresh process is executed every 9h * 60m * 60s * 1000 ms = 32400000
+
+**31** - Kerlink REST page size (max 1000)
+
+**32** - Kerlink account name (the same device group will be created in Live Objects Platform)
+
+**34** - Second Kerlink account configuration (you can add as many Kerlink accounts as you wish)
+
 
 #### Loging
 Logging configuration can be found in **logback.xml** file located in src/main/resources. You can find more information about how to configure your logs [here](http://logback.qos.ch/manual/configuration.html) 
@@ -127,7 +147,9 @@ Fill fields in next screens
 
 ![Push Confiuration 3](/assets/push_configuration_3.png)
 
-![Push Confiuration 4](/assets/push_configuration_4.png)
+Set header "Kerlink-Account" as shown in the screenshot. The value of this header must be the same as field "kerlink-account-name" in configuration file. 
+
+![Push Confiuration 4](/assets/push_configuration4.png)
 
 And now go to **Administration -> Clusters** and click edit icon next to the cluster you want to edit and choose new push configuration 
 

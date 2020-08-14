@@ -7,6 +7,11 @@
 
 package com.orange.lo.sample.kerlink2lo.kerlink;
 
+import com.orange.lo.sample.kerlink2lo.kerlink.api.KerlinkApi;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -15,6 +20,12 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 @Configuration
 public class KerlinkConfiguration {
 
+    private KerlinkPropertiesList kerlinkPropertiesList;
+
+    public KerlinkConfiguration(KerlinkPropertiesList kerlinkPropertiesList) {
+        this.kerlinkPropertiesList = kerlinkPropertiesList;
+    }
+
     @Bean(name = "kerlinkRestTemplate")
     public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();
@@ -22,5 +33,14 @@ public class KerlinkConfiguration {
         defaultUriBuilderFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
         restTemplate.setUriTemplateHandler(defaultUriBuilderFactory);
         return restTemplate;
+    }
+
+    @Bean
+    public Map<String, KerlinkApi> kerlinkApiMap() {
+        Map<String, KerlinkApi> map = new HashMap<String, KerlinkApi>();
+        kerlinkPropertiesList.getKerlinkList().forEach(kerlinkProperties -> {
+            map.put(kerlinkProperties.getKerlinkAccountName(), new KerlinkApi(kerlinkProperties, restTemplate()));
+        });
+        return map;
     }
 }

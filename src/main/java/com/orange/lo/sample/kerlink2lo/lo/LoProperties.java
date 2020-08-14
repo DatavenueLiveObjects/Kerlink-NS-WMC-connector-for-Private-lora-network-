@@ -24,8 +24,6 @@ public class LoProperties {
     private String connectorApiKey;
     private String connectorUser;
     private String connectorMqttUrl;
-    private String deviceGroupName;
-    private String deviceGroupId;
     private String devicePrefix;
     private String messageDecoder;
     
@@ -101,14 +99,6 @@ public class LoProperties {
         this.connectorMqttUrl = connectorMqttUrl;
     }
 
-    public String getDeviceGroupId() {
-        return deviceGroupId;
-    }
-
-    public void setDeviceGroupId(String deviceGroupId) {
-        this.deviceGroupId = deviceGroupId;
-    }
-
     public String getDevicePrefix() {
         return devicePrefix;
     }
@@ -123,14 +113,6 @@ public class LoProperties {
 
     public void setMessageDecoder(String messageDecoder) {
         this.messageDecoder = messageDecoder;
-    }
-
-    public String getDeviceGroupName() {
-        return deviceGroupName;
-    }
-
-    public void setDeviceGroupName(String deviceGroupName) {
-        this.deviceGroupName = deviceGroupName;
     }
 
     public String getApiUrl() {

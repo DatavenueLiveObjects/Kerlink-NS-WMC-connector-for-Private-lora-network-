@@ -6,6 +6,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkProperties;
+import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
 import com.orange.lo.sample.kerlink2lo.kerlink.api.KerlinkApi;
 import com.orange.lo.sample.kerlink2lo.kerlink.api.model.EndDeviceDto;
 import com.orange.lo.sample.kerlink2lo.lo.ExternalConnectorService;
@@ -14,116 +16,126 @@ import com.orange.lo.sample.kerlink2lo.lo.LoDeviceCache;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceProvider;
 import com.orange.lo.sample.kerlink2lo.lo.LoProperties;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-
 @RunWith(MockitoJUnitRunner.class)
 public class IotDeviceManagementTest {
 
     private final String LO_DEVICE_PREFIX = "urn:lo:nsid:x-connector:";
-    
+    private static final String GROUP_NAME = "Test";
+
     @Mock
     private KerlinkApi kerlinkApi;
-    
+
     @Mock
     private LoDeviceProvider loDeviceProvider;
-    
+
     @Mock
     private ExternalConnectorService externalConnectorService;
-    
+
     private LoDeviceCache loDeviceCache;
     private LoProperties loProperties;
     private IotDeviceManagement iotDeviceManagement;
-    
+    private Map<String, KerlinkApi> kerlinkApiMap;
+    private KerlinkPropertiesList kerlinkPropertiesList;
+
     @Before
     public void setUp() {
         loDeviceCache = new LoDeviceCache();
         loProperties = new LoProperties();
-        iotDeviceManagement = new IotDeviceManagement(kerlinkApi, loDeviceProvider, externalConnectorService, loProperties, loDeviceCache);
+        kerlinkApiMap = new HashMap<String, KerlinkApi>();
+        kerlinkApiMap.put("", kerlinkApi);
+
+        KerlinkProperties kerlinkProperties = new KerlinkProperties();
+        kerlinkPropertiesList = new KerlinkPropertiesList();
+        kerlinkPropertiesList.setKerlinkList(Lists.list(kerlinkProperties));
+        iotDeviceManagement = new IotDeviceManagement(kerlinkApiMap, loDeviceProvider, externalConnectorService, loProperties, kerlinkPropertiesList, loDeviceCache);
     }
-    
+
     @Test
     public void shouldDoNothingWhenDevicesAreEqual() throws InterruptedException {
         // given
         loProperties.setDevicePrefix(LO_DEVICE_PREFIX);
         List<EndDeviceDto> kerlinkDevicesList = getKerlinkDevicesList(3);
         List<LoDevice> loDevicesList = getLoDevicecsList(3);
-        
+
         when(kerlinkApi.getEndDevices()).thenReturn(kerlinkDevicesList);
-        when(loDeviceProvider.getDevices()).thenReturn(loDevicesList);
-        
+        when(loDeviceProvider.getDevices(GROUP_NAME)).thenReturn(loDevicesList);
+
         // when
-        iotDeviceManagement.synchronizeDevices();        
-        
+        iotDeviceManagement.synchronizeDevices();
+
         // then
-        verify(externalConnectorService, times(0)).createDevice(any());
+        verify(externalConnectorService, times(0)).createDevice(any(), GROUP_NAME);
         verify(externalConnectorService, times(0)).deleteDevice(any());
 
     }
-    
+
     @Test
     public void shouldCreateNewDevices() throws InterruptedException {
         // given
-        CountDownLatch countDownLatch = new CountDownLatch(2);
-
         loProperties.setDevicePrefix(LO_DEVICE_PREFIX);
-        loProperties.setSynchronizationThreadPoolSize(10); 
-        
+        loProperties.setSynchronizationThreadPoolSize(10);
+
         List<EndDeviceDto> kerlinkDevicesList = getKerlinkDevicesList(6);
         List<LoDevice> loDevicesList = getLoDevicecsList(4);
-        
+
         when(kerlinkApi.getEndDevices()).thenReturn(kerlinkDevicesList);
-        when(loDeviceProvider.getDevices()).thenReturn(loDevicesList);
-        
+        when(loDeviceProvider.getDevices(GROUP_NAME)).thenReturn(loDevicesList);
+
+        CountDownLatch countDownLatch = new CountDownLatch(2);
+
         doAnswer(invocation -> {
             countDownLatch.countDown();
             return null;
-        }).when(externalConnectorService).createDevice(any());
-        
+        }).when(externalConnectorService).createDevice(any(), GROUP_NAME);
+
         // when
         iotDeviceManagement.synchronizeDevices();
-        countDownLatch.await(); 
-        
+        countDownLatch.await();
+
         // then
-        verify(externalConnectorService, times(2)).createDevice(any());
+        verify(externalConnectorService, times(2)).createDevice(any(), GROUP_NAME);
         verify(externalConnectorService, times(0)).deleteDevice(any());
     }
-    
+
     @Test
     public void shouldDeleteOldDevices() throws InterruptedException {
         // given
-        CountDownLatch countDownLatch = new CountDownLatch(3);
-        
         loProperties.setDevicePrefix(LO_DEVICE_PREFIX);
-        loProperties.setSynchronizationThreadPoolSize(10); 
-        
-        
+        loProperties.setSynchronizationThreadPoolSize(10);
+
         List<EndDeviceDto> kerlinkDevicesList = getKerlinkDevicesList(5);
         List<LoDevice> loDevicesList = getLoDevicecsList(8);
-        
+
         when(kerlinkApi.getEndDevices()).thenReturn(kerlinkDevicesList);
-        when(loDeviceProvider.getDevices()).thenReturn(loDevicesList);
+        when(loDeviceProvider.getDevices(GROUP_NAME)).thenReturn(loDevicesList);
+
+        CountDownLatch countDownLatch = new CountDownLatch(3);
 
         doAnswer(invocation -> {
             countDownLatch.countDown();
             return null;
         }).when(externalConnectorService).deleteDevice(any());
-        
+
         // when
-        iotDeviceManagement.synchronizeDevices();        
+        iotDeviceManagement.synchronizeDevices();
         countDownLatch.await();
-        
+
         // then
-        verify(externalConnectorService, times(0)).createDevice(any());
+        verify(externalConnectorService, times(0)).createDevice(any(), GROUP_NAME);
         verify(externalConnectorService, times(3)).deleteDevice(any());
     }
 

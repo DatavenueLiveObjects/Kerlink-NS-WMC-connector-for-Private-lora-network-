@@ -4,26 +4,37 @@ spring:
   application:
     name: Kerlink2Lo
     
-kerlink:
-  base-url: https://_your_wmc_host_/gms
-  login: _kerlink_login_
-  password: _kerlink_password
-  login-interval: 32400000
-  page-size: 20
-  
 lo:
   api-key: _api_key_
   api-url: https://liveobjects.orange-business.com/api/
   connector-api-key: _connector_api_key_
   connector-user: connector
   connector-mqtt-url: ssl://liveobjects.orange-business.com:8883
+  
   synchronization-device-interval: 10000
   synchronization-thread-pool-size: 40
+  
   page-size: 20
-  device-group-name: kerlink
   device-prefix: 'urn:lo:nsid:x-connector:'
   
   message-sender-max-thread-pool-size: 100
   message-sender-min-thread-pool-size: 10
   message-qos: 1
-  message-decoder: 
+  message-decoder: test_csv
+  
+kerlink-list:
+  -
+    base-url: https://_your_wmc_host_/gms
+    login: _kerlink_login_
+    password: _kerlink_password
+    login-interval: 32400000
+    page-size: 20
+    kerlink-account-name: _kerlink_account_name
+    
+  -
+    base-url: https://_your_wmc_host_/gms
+    login: _kerlink_login_
+    password: _kerlink_password
+    login-interval: 32400000
+    page-size: 20
+    kerlink-account-name: _kerlink_account_name    

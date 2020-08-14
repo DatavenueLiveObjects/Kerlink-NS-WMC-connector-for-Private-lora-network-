@@ -1,30 +1,35 @@
 package com.orange.lo.sample.kerlink2lo.lo;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
-
 @RunWith(MockitoJUnitRunner.class)
 public class LoDeviceProviderTest {
 
+    private static final String GROUP_NAME = "Test";
+
     LoProperties loProperties;
+    KerlinkPropertiesList kerlinkPropertiesList;
 
     @Mock
     RestTemplate restTemplate;
@@ -40,9 +45,8 @@ public class LoDeviceProviderTest {
 
     @Test
     public void shouldGetNoDevices() {
-        when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(), eq(LoDevice[].class)))
-                .thenReturn(getResponse(0, 0, 0, 0));
-        int count = new LoDeviceProvider(loProperties, httpHeaders, restTemplate).getDevices().size();
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(), eq(LoDevice[].class))).thenReturn(getResponse(0, 0, 0, 0));
+        int count = new LoDeviceProvider(loProperties, kerlinkPropertiesList, httpHeaders, restTemplate).getDevices(GROUP_NAME).size();
         Assert.assertEquals(0, count);
     }
 
@@ -51,10 +55,8 @@ public class LoDeviceProviderTest {
         int limit = 0;
         int total = 1;
         loProperties.setPageSize(limit);
-        when(restTemplate.exchange(eq(getUrl(limit, 0)), eq(HttpMethod.GET),
-                any(), eq(LoDevice[].class))).thenReturn(
-                getResponse(limit, total, 1, 0));
-        int count = new LoDeviceProvider(loProperties, httpHeaders, restTemplate).getDevices().size();
+        when(restTemplate.exchange(eq(getUrl(limit, 0)), eq(HttpMethod.GET), any(), eq(LoDevice[].class))).thenReturn(getResponse(limit, total, 1, 0));
+        int count = new LoDeviceProvider(loProperties, kerlinkPropertiesList, httpHeaders, restTemplate).getDevices(GROUP_NAME).size();
         Assert.assertEquals(limit, count);
     }
 
@@ -62,10 +64,8 @@ public class LoDeviceProviderTest {
     public void shouldGetDevicesWithLimitEqualsTotalCount() {
         int limit = 2;
         loProperties.setPageSize(limit);
-        when(restTemplate.exchange(eq(getUrl(limit, 0)), eq(HttpMethod.GET),
-                any(), eq(LoDevice[].class))).thenReturn(
-                getResponse(limit, limit, 1, 0));
-        int count = new LoDeviceProvider(loProperties, httpHeaders, restTemplate).getDevices().size();
+        when(restTemplate.exchange(eq(getUrl(limit, 0)), eq(HttpMethod.GET), any(), eq(LoDevice[].class))).thenReturn(getResponse(limit, limit, 1, 0));
+        int count = new LoDeviceProvider(loProperties, kerlinkPropertiesList, httpHeaders, restTemplate).getDevices(GROUP_NAME).size();
         Assert.assertEquals(limit, count);
     }
 
@@ -74,10 +74,8 @@ public class LoDeviceProviderTest {
         int limit = 3;
         int total = 2;
         loProperties.setPageSize(limit);
-        when(restTemplate.exchange(eq(getUrl(limit, 0)), eq(HttpMethod.GET),
-                any(), eq(LoDevice[].class))).thenReturn(
-                getResponse(total, total, 1, 0));
-        int count = new LoDeviceProvider(loProperties, httpHeaders, restTemplate).getDevices().size();
+        when(restTemplate.exchange(eq(getUrl(limit, 0)), eq(HttpMethod.GET), any(), eq(LoDevice[].class))).thenReturn(getResponse(total, total, 1, 0));
+        int count = new LoDeviceProvider(loProperties, kerlinkPropertiesList, httpHeaders, restTemplate).getDevices(GROUP_NAME).size();
         Assert.assertEquals(total, count);
     }
 
@@ -86,13 +84,9 @@ public class LoDeviceProviderTest {
         int limit = 2;
         int total = 4;
         loProperties.setPageSize(limit);
-        when(restTemplate.exchange(eq(getUrl(limit, 0)), eq(HttpMethod.GET),
-                any(), eq(LoDevice[].class))).thenReturn(
-                        getResponse(limit, total, 1, 0));
-        when(restTemplate.exchange(eq(getUrl(limit, 2)), eq(HttpMethod.GET),
-                any(), eq(LoDevice[].class))).thenReturn(
-                        getResponse(limit, total, 1, 0));
-        int count = new LoDeviceProvider(loProperties, httpHeaders, restTemplate).getDevices().size();
+        when(restTemplate.exchange(eq(getUrl(limit, 0)), eq(HttpMethod.GET), any(), eq(LoDevice[].class))).thenReturn(getResponse(limit, total, 1, 0));
+        when(restTemplate.exchange(eq(getUrl(limit, 2)), eq(HttpMethod.GET), any(), eq(LoDevice[].class))).thenReturn(getResponse(limit, total, 1, 0));
+        int count = new LoDeviceProvider(loProperties, kerlinkPropertiesList, httpHeaders, restTemplate).getDevices(GROUP_NAME).size();
         Assert.assertEquals(total, count);
     }
 
@@ -101,13 +95,9 @@ public class LoDeviceProviderTest {
         int limit = 2;
         int total = 3;
         loProperties.setPageSize(limit);
-        when(restTemplate.exchange(eq(getUrl(limit, 0)), eq(HttpMethod.GET),
-                any(), eq(LoDevice[].class))).thenReturn(
-                getResponse(limit, total, 1, 0));
-        when(restTemplate.exchange(eq(getUrl(limit, 2)), eq(HttpMethod.GET),
-                any(), eq(LoDevice[].class))).thenReturn(
-                getResponse(total - limit, total, 1, 0));
-        int count = new LoDeviceProvider(loProperties, httpHeaders, restTemplate).getDevices().size();
+        when(restTemplate.exchange(eq(getUrl(limit, 0)), eq(HttpMethod.GET), any(), eq(LoDevice[].class))).thenReturn(getResponse(limit, total, 1, 0));
+        when(restTemplate.exchange(eq(getUrl(limit, 2)), eq(HttpMethod.GET), any(), eq(LoDevice[].class))).thenReturn(getResponse(total - limit, total, 1, 0));
+        int count = new LoDeviceProvider(loProperties, kerlinkPropertiesList, httpHeaders, restTemplate).getDevices(GROUP_NAME).size();
         Assert.assertEquals(total, count);
     }
 
@@ -117,13 +107,9 @@ public class LoDeviceProviderTest {
         int total1 = 4;
         int total2 = 2;
         loProperties.setPageSize(limit);
-        when(restTemplate.exchange(eq(getUrl(limit, 0)), eq(HttpMethod.GET),
-                any(), eq(LoDevice[].class))).thenReturn(
-                getResponse(limit, total1, 1, 0));
-        when(restTemplate.exchange(eq(getUrl(limit, 3)), eq(HttpMethod.GET),
-                any(), eq(LoDevice[].class))).thenReturn(
-                getResponse(0, total2, 1, 0));
-        int count = new LoDeviceProvider(loProperties, httpHeaders, restTemplate).getDevices().size();
+        when(restTemplate.exchange(eq(getUrl(limit, 0)), eq(HttpMethod.GET), any(), eq(LoDevice[].class))).thenReturn(getResponse(limit, total1, 1, 0));
+        when(restTemplate.exchange(eq(getUrl(limit, 3)), eq(HttpMethod.GET), any(), eq(LoDevice[].class))).thenReturn(getResponse(0, total2, 1, 0));
+        int count = new LoDeviceProvider(loProperties, kerlinkPropertiesList, httpHeaders, restTemplate).getDevices(GROUP_NAME).size();
         Assert.assertEquals(limit, count);
     }
 
@@ -132,14 +118,10 @@ public class LoDeviceProviderTest {
         int limit = 2;
         int total = 3;
         loProperties.setPageSize(limit);
-        when(restTemplate.exchange(eq(getUrl(limit, 0)), eq(HttpMethod.GET),
-                any(), eq(LoDevice[].class))).thenReturn(
-                getResponse(limit, total, 0, System.currentTimeMillis() + 10000));
-        when(restTemplate.exchange(eq(getUrl(limit, 2)), eq(HttpMethod.GET),
-                any(), eq(LoDevice[].class))).thenReturn(
-                getResponse(limit, total, 1, 0));
+        when(restTemplate.exchange(eq(getUrl(limit, 0)), eq(HttpMethod.GET), any(), eq(LoDevice[].class))).thenReturn(getResponse(limit, total, 0, System.currentTimeMillis() + 10000));
+        when(restTemplate.exchange(eq(getUrl(limit, 2)), eq(HttpMethod.GET), any(), eq(LoDevice[].class))).thenReturn(getResponse(limit, total, 1, 0));
         long start = System.currentTimeMillis();
-        new LoDeviceProvider(loProperties, httpHeaders, restTemplate).getDevices();
+        new LoDeviceProvider(loProperties, kerlinkPropertiesList, httpHeaders, restTemplate).getDevices(GROUP_NAME);
         long stop = System.currentTimeMillis();
         Assert.assertTrue(stop - start >= 10000);
     }
@@ -147,24 +129,19 @@ public class LoDeviceProviderTest {
     @Test
     public void shouldAddDevice() {
         String deviceId = "test";
-        new LoDeviceProvider(loProperties, httpHeaders, restTemplate).addDevice(deviceId);
-        verify(restTemplate, times(1))
-                .exchange(eq(loProperties.getApiUrl() + "/v1/deviceMgt/devices"), eq(HttpMethod.POST),
-                        any(), eq(Void.class));
+        new LoDeviceProvider(loProperties, kerlinkPropertiesList, httpHeaders, restTemplate).addDevice(deviceId, GROUP_NAME);
+        verify(restTemplate, times(1)).exchange(eq(loProperties.getApiUrl() + "/v1/deviceMgt/devices"), eq(HttpMethod.POST), any(), eq(Void.class));
     }
 
     @Test
     public void shouldDeleteDevice() {
         String deviceId = "test";
-        new LoDeviceProvider(loProperties, httpHeaders, restTemplate).deleteDevice(deviceId);
-        verify(restTemplate, times(1))
-                .exchange(eq(loProperties.getApiUrl() + "/v1/deviceMgt/devices/" + deviceId), eq(HttpMethod.DELETE),
-                        any(), eq(Void.class));
+        new LoDeviceProvider(loProperties, kerlinkPropertiesList, httpHeaders, restTemplate).deleteDevice(deviceId);
+        verify(restTemplate, times(1)).exchange(eq(loProperties.getApiUrl() + "/v1/deviceMgt/devices/" + deviceId), eq(HttpMethod.DELETE), any(), eq(Void.class));
     }
 
     private String getUrl(int limit, int offset) {
-        return "localhost/v1/deviceMgt/devices?limit=" + limit +
-                "&offset=" + offset + "&groupId=null&fields=id,name,group";
+        return "localhost/v1/deviceMgt/devices?limit=" + limit + "&offset=" + offset + "&groupId=null&fields=id,name,group";
     }
 
     private ResponseEntity<LoDevice[]> getResponse(int devicesCount, int xTotalCount, int xRateLimitRemaining, long xRateLimitReset) {
@@ -177,8 +154,9 @@ public class LoDeviceProviderTest {
 
     private LoDevice[] returnDevices(int count) {
         LoDevice[] devices = new LoDevice[count];
-        for (int i = 0;  i < count; i++)
+        for (int i = 0; i < count; i++) {
             devices[i] = new LoDevice();
+        }
         return devices;
     }
 }
