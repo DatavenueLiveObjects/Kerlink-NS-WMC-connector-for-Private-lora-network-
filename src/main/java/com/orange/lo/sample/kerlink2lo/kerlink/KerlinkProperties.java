@@ -7,17 +7,13 @@
 
 package com.orange.lo.sample.kerlink2lo.kerlink;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
-@Component
-@ConfigurationProperties(prefix = "kerlink")
 public class KerlinkProperties {
 
     private String baseUrl;
     private String login;
     private String password;
     private int pageSize;
+    private String kerlinkAccountName;
 
     public String getBaseUrl() {
         return baseUrl;
@@ -49,5 +45,13 @@ public class KerlinkProperties {
 
     public void setPageSize(int pageSize) {
         this.pageSize = pageSize;
+    }
+
+    public String getKerlinkAccountName() {
+        return kerlinkAccountName;
+    }
+
+    public void setKerlinkAccountName(String kerlinkAccountName) {
+        this.kerlinkAccountName = kerlinkAccountName;
     }
 }

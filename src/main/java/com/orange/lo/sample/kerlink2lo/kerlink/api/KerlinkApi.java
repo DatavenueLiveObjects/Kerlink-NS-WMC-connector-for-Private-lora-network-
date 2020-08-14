@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.PostConstruct;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,12 +32,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-
-
-@Component
 @EnableScheduling
 public class KerlinkApi {
 
@@ -55,10 +49,10 @@ public class KerlinkApi {
         this.kerlinkProperties = kerlinkProperties;
         this.restTemplate = restTemplate;
         this.firstHref = "/application/endDevices?fields=devEui,devAddr,name,country,status&sort=%2BdevEui&page=1&pageSize=" + kerlinkProperties.getPageSize();
+        login();
     }
-    
+
     @Scheduled(fixedRateString = "${kerlink.login-interval}")
-    @PostConstruct
     public void login() {
         LOG.info("Trying to login and get bearer token");
         UserDto userDto = new UserDto();
@@ -82,7 +76,8 @@ public class KerlinkApi {
     }
 
     public List<EndDeviceDto> getEndDevices() {
-        ParameterizedTypeReference<PaginatedDto<EndDeviceDto>> returnType = new ParameterizedTypeReference<PaginatedDto<EndDeviceDto>>() {};
+        ParameterizedTypeReference<PaginatedDto<EndDeviceDto>> returnType = new ParameterizedTypeReference<PaginatedDto<EndDeviceDto>>() {
+        };
         List<EndDeviceDto> devicesList = new ArrayList<EndDeviceDto>();
         Optional<String> href = Optional.of(firstHref);
         while (href.isPresent()) {

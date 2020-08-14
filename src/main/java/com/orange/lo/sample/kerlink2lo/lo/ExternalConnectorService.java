@@ -27,9 +27,9 @@ public class ExternalConnectorService {
         this.loProperties = loProperties;
     }
     
-    public void sendMessage(DataUpDto dataUpDto) {
+    public void sendMessage(DataUpDto dataUpDto, String kerlinkAccountName) {
         if (!deviceCache.contains(dataUpDto.getEndDevice().getDevEui())) {
-            createDevice(dataUpDto.getEndDevice().getDevEui());
+            createDevice(dataUpDto.getEndDevice().getDevEui(), kerlinkAccountName);
         }
         externalConnector.sendMessage(dataUpDto);            
     }
@@ -38,10 +38,10 @@ public class ExternalConnectorService {
         externalConnector.sendCommandResponse(dataDownEventDto);
     }
     
-    public void createDevice(String kerlinkDeviceId) {
-        loDeviceProvider.addDevice(kerlinkDeviceId);
+    public void createDevice(String kerlinkDeviceId, String kerlinkAccountName) {
+        loDeviceProvider.addDevice(kerlinkDeviceId, kerlinkAccountName);
         externalConnector.sendStatus(kerlinkDeviceId);
-        deviceCache.add(kerlinkDeviceId);        
+        deviceCache.add(kerlinkDeviceId, kerlinkAccountName);        
     }
     
     public void deleteDevice(String loDeviceId) {

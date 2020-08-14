@@ -1,8 +1,8 @@
 package com.orange.lo.sample.kerlink2lo.lo;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentHashMap.KeySetView;
 
 import org.springframework.stereotype.Component;
 
@@ -12,21 +12,25 @@ import org.springframework.stereotype.Component;
 @Component
 public class LoDeviceCache {
 
-    private KeySetView<String, Boolean> cache = ConcurrentHashMap.newKeySet();
+    private Map<String, String> cache = new ConcurrentHashMap<String, String>();
 
-    public boolean add(String deviceId) {
-        return cache.add(deviceId);
+    public void add(String deviceId, String groupName) {
+        cache.put(deviceId, groupName);
     }
-    
-    public boolean addAll(Collection<? extends String> c) {
-        return cache.addAll(c);
+
+    public void addAll(Collection<? extends String> c, String groupName) {
+        c.forEach(d -> cache.put(d, groupName));
     }
-    
-    public boolean delete(String deviceId) {
-        return cache.remove(deviceId);
+
+    public void delete(String deviceId) {
+        cache.remove(deviceId);
     }
-    
+
     public boolean contains(String deviceId) {
-        return cache.contains(deviceId);
+        return cache.containsKey(deviceId);
+    }
+
+    public String getGroup(String deviceId) {
+        return cache.get(deviceId);
     }
 }

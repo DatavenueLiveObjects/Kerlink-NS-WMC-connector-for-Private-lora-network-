@@ -28,6 +28,7 @@ import com.orange.lo.sample.kerlink2lo.lo.model.NodeStatus.Capabilities;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Base64;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.PostConstruct;
@@ -42,7 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-
 @Component
 public class ExternalConnector {
 
@@ -50,27 +50,28 @@ public class ExternalConnector {
     private static final String STATUS_TOPIC_TEMPLATE = "connector/v1/nodes/%s/status";
     private static final String COMMAND_RESPONSE_TOPIC = "connector/v1/responses/command";
     private static final String COMMAND_REQUEST_TOPIC = "connector/v1/requests/command";
-    
+
     private static final String F_PORT_KEY = "fPort";
     private static final String F_PORT_DEFAULT = "1";
-    
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private IMqttClient loMqttClient;
     private ObjectMapper objectMapper;
     private LoProperties loProperties;
-    private KerlinkApi kerlinkApi;
+    private Map<String, KerlinkApi> kerlinkApiMap;
     private CommandMapper commandMapper;
+    private LoDeviceCache deviceCache;
 
-    public ExternalConnector(IMqttClient loMqttClient, KerlinkApi kerlinkApi, ObjectMapper objectMapper, CommandMapper commandMapper, LoProperties loProperties) {
+    public ExternalConnector(IMqttClient loMqttClient, Map<String, KerlinkApi> kerlinkApiMap, ObjectMapper objectMapper, CommandMapper commandMapper, LoProperties loProperties, LoDeviceCache deviceCache) {
         this.loMqttClient = loMqttClient;
-        this.kerlinkApi = kerlinkApi;
+        this.kerlinkApiMap = kerlinkApiMap;
         this.objectMapper = objectMapper;
         this.commandMapper = commandMapper;
         this.loProperties = loProperties;
+        this.deviceCache = deviceCache;
     }
-    
+
     @PostConstruct
     public void receiveCommands() {
         try {
@@ -86,14 +87,14 @@ public class ExternalConnector {
 
         DataMessage dataMessage = new DataMessage();
         convertPayload(dataUpDto);
-        
+
         dataMessage.setValue(dataUpDto);
-        
+
         String messageDecoder = loProperties.getMessageDecoder();
         if (messageDecoder != null && !messageDecoder.isEmpty()) {
-            dataMessage.setMetadata(new Metadata(messageDecoder));            
+            dataMessage.setMetadata(new Metadata(messageDecoder));
         }
-        
+
         MqttMessage msg = prepareMqttMessgae(dataMessage);
         String topic = String.format(DATA_TOPIC_TEMPLATE, dataUpDto.getEndDevice().getDevEui());
 
@@ -113,15 +114,13 @@ public class ExternalConnector {
         publish(topic, msg);
     }
 
-    
-    
     public void sendCommandResponse(DataDownEventDto dataDownEventDto) {
         Optional<LoCommand> loCommand = commandMapper.get(dataDownEventDto.getDataDownId());
-        
+
         if (loCommand.isPresent()) {
             LOG.debug("Sending command response for device {}", loCommand.get().getNodeId());
             CommandResponse commandResponse = new CommandResponse(loCommand.get().getId(), loCommand.get().getNodeId());
-            
+
             MqttMessage msg = prepareMqttMessgae(commandResponse);
             publish(COMMAND_RESPONSE_TOPIC, msg);
         } else {
@@ -148,26 +147,26 @@ public class ExternalConnector {
             throw new LoMqttException(e);
         }
     }
-    
+
     private void convertPayload(DataUpDto dataUpDto) {
         switch (dataUpDto.getEncodingType()) {
-            case "BASE64":
-                byte[] payload = Base64.getDecoder().decode(dataUpDto.getPayload());
-                dataUpDto.setPayload(new String(payload));
-                break;
-            case "HEXA":
-                try {
-                    byte[] decodeHex = Hex.decodeHex(dataUpDto.getPayload());
-                    dataUpDto.setPayload(new String(decodeHex));
-                } catch (DecoderException e) {
-                    throw new EncodingTypeException(e);
-                }
-                break;
-            default:
-                break;
+        case "BASE64":
+            byte[] payload = Base64.getDecoder().decode(dataUpDto.getPayload());
+            dataUpDto.setPayload(new String(payload));
+            break;
+        case "HEXA":
+            try {
+                byte[] decodeHex = Hex.decodeHex(dataUpDto.getPayload());
+                dataUpDto.setPayload(new String(decodeHex));
+            } catch (DecoderException e) {
+                throw new EncodingTypeException(e);
+            }
+            break;
+        default:
+            break;
         }
     }
-    
+
     protected class MessageListener implements IMqttMessageListener {
 
         private static final String CONTENT_TYPE_TEXT = "TEXT";
@@ -175,15 +174,15 @@ public class ExternalConnector {
         @Override
         public void messageArrived(String topic, MqttMessage message) throws Exception {
             LOG.trace("New Command received - topic: {}, command: {}", topic, message);
-            
+
             CommandRequest commandRequest = objectMapper.readValue(message.getPayload(), CommandRequest.class);
-            
+
             DataDownDto dataDownDto = prepareDataDown(commandRequest);
-            
-            Optional<String> commandId = kerlinkApi.sendCommand(dataDownDto);
+
+            Optional<String> commandId = kerlinkApiMap.get(deviceCache.getGroup(dataDownDto.getEndDevice().getDevEui())).sendCommand(dataDownDto);
             if (commandId.isPresent()) {
                 commandMapper.put(commandId.get(), commandRequest.getId(), commandRequest.getNodeId());
-                LOG.trace("Put to commandMapper: kerlinkID = {}, loId = {}, nodeId = {}", commandId, commandRequest.getId(), commandRequest.getNodeId());                
+                LOG.trace("Put to commandMapper: kerlinkID = {}, loId = {}, nodeId = {}", commandId, commandRequest.getId(), commandRequest.getNodeId());
             }
         }
 
@@ -191,13 +190,13 @@ public class ExternalConnector {
             DataDownDto dataDownDto = new DataDownDto();
             dataDownDto.setConfirmed(false);
             dataDownDto.setContentType(CONTENT_TYPE_TEXT);
-            
+
             String fPort = commandRequest.getValue().getArg().getOrDefault(F_PORT_KEY, F_PORT_DEFAULT);
             dataDownDto.setfPort(Integer.parseInt(fPort));
-            
+
             EndDeviceDto endDeviceDto = new EndDeviceDto();
             endDeviceDto.setDevEui(commandRequest.getNodeId());
-            
+
             dataDownDto.setEndDevice(endDeviceDto);
             dataDownDto.setPayload(commandRequest.getValue().getReq());
             return dataDownDto;
