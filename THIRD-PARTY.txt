@@ -1,5 +1,8 @@
 COMPONENT                               | VERSION       | LICENCE                    | URL
 ----------------------------------------------------------------------------------------------------------------------------------------------
-Spring Boot                             | 2.1.8.RELEASE | Apache License 2.0         | https://www.apache.org/licenses/LICENSE-2.0
-Eclipse Paho                            | 1.2.0         | Eclipse Public License 1.0 | http://www.eclipse.org/org/documents/epl-v10.php
+Spring Boot Starter                     | 2.1.8.RELEASE | Apache License 2.0         | https://www.apache.org/licenses/LICENSE-2.0
+Spring Boot Starter Web                 | 2.1.8.RELEASE | Apache License 2.0         | https://www.apache.org/licenses/LICENSE-2.0
+Spring Boot Starter Test                | 2.1.8.RELEASE | Apache License 2.0         | https://www.apache.org/licenses/LICENSE-2.0
+Spring Boot Configuration Processor     | 2.1.8.RELEASE | Apache License 2.0         | https://www.apache.org/licenses/LICENSE-2.0
+Eclipse Paho Client Mqttv3              | 1.2.4         | Eclipse Public License 2.0 | https://www.eclipse.org/legal/epl-v20.html
 Apache HttpComponents Client            | 4.5.9         | Apache License 2.0         | http://www.apache.org/licenses/LICENSE-2.0.txt
