@@ -32,7 +32,7 @@ import org.springframework.web.client.HttpClientErrorException;
 @RestController
 public class Kerlink2LoController {
 
-    private static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String KERLINK_ACCOUNT_HEADER = "Kerlink-Account";
 
     private ExternalConnectorService externalConnectorService;
@@ -44,7 +44,7 @@ public class Kerlink2LoController {
     @PostMapping("/dataUp")
     public Callable<ResponseEntity<Void>> dataUp(@RequestBody DataUpDto dataUpDto, @RequestHeader HttpHeaders headers) {
         LOG.debug("received {}", dataUpDto);
-        LOG.debug(headers.get(KERLINK_ACCOUNT_HEADER).get(0).toString());
+        LOG.debug(headers.get(KERLINK_ACCOUNT_HEADER).get(0));
 
         return () -> {
             Optional<String> kerlinkAccountName = getKerlinkAccountName(headers);

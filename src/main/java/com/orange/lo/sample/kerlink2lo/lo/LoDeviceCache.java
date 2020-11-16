@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class LoDeviceCache {
 
-    private Map<String, String> cache = new ConcurrentHashMap<String, String>();
+    private Map<String, String> cache = new ConcurrentHashMap<>();
 
     public void add(String deviceId, String groupName) {
         cache.put(deviceId, groupName);

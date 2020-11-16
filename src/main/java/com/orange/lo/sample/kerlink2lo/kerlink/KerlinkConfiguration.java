@@ -37,10 +37,11 @@ public class KerlinkConfiguration {
 
     @Bean
     public Map<String, KerlinkApi> kerlinkApiMap() {
-        Map<String, KerlinkApi> map = new HashMap<String, KerlinkApi>();
-        kerlinkPropertiesList.getKerlinkList().forEach(kerlinkProperties -> {
-            map.put(kerlinkProperties.getKerlinkAccountName(), new KerlinkApi(kerlinkProperties, restTemplate()));
-        });
+        Map<String, KerlinkApi> map = new HashMap<>();
+        kerlinkPropertiesList.getKerlinkList().forEach(kerlinkProperties -> map.put(
+                kerlinkProperties.getKerlinkAccountName(),
+                new KerlinkApi(kerlinkProperties, restTemplate())
+        ));
         return map;
     }
 }

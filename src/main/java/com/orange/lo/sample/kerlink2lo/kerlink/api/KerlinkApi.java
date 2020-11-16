@@ -37,7 +37,7 @@ import org.springframework.web.client.RestTemplate;
 @EnableScheduling
 public class KerlinkApi {
 
-    private static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private RestTemplate restTemplate;
     private KerlinkProperties kerlinkProperties;
     HttpEntity<Void> httpEntity;
@@ -78,7 +78,7 @@ public class KerlinkApi {
     public List<EndDeviceDto> getEndDevices() {
         ParameterizedTypeReference<PaginatedDto<EndDeviceDto>> returnType = new ParameterizedTypeReference<PaginatedDto<EndDeviceDto>>() {
         };
-        List<EndDeviceDto> devicesList = new ArrayList<EndDeviceDto>();
+        List<EndDeviceDto> devicesList = new ArrayList<>();
         Optional<String> href = Optional.of(firstHref);
         while (href.isPresent()) {
             String url = kerlinkProperties.getBaseUrl() + href.get();
@@ -104,19 +104,17 @@ public class KerlinkApi {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json,application/vnd.kerlink.iot-v1+json");
         headers.set("Authorization", token);
-        HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
-        return httpEntity;
+        return new HttpEntity<>(headers);
     }
 
     private <T> HttpEntity<T> prepareHttpEntity(String token, T t) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
         headers.set("Authorization", token);
-        HttpEntity<T> httpEntity = new HttpEntity<>(t, headers);
-        return httpEntity;
+        return new HttpEntity<>(t, headers);
     }
 
     private Optional<String> getNextPageHref(List<LinkDto> links) {
-        return links.stream().filter(l -> "next".equals(l.getRel())).findFirst().map(l -> l.getHref());
+        return links.stream().filter(l -> "next".equals(l.getRel())).findFirst().map(LinkDto::getHref);
     }
 }

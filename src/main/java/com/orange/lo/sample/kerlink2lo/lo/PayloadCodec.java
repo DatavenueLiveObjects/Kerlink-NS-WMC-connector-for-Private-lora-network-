@@ -7,23 +7,22 @@ import org.apache.commons.codec.binary.Hex;
 
 public class PayloadCodec {
 
+    private PayloadCodec() {
+    }
+
     public static String encodeToBase64(String raw) {
-        String encoded = Base64.getEncoder().encodeToString(raw.getBytes());
-        return encoded;
+        return Base64.getEncoder().encodeToString(raw.getBytes());
     }
 
     public static String decodeFromBase64(String encoded) {
-        String decoded = new String(Base64.getDecoder().decode(encoded));
-        return decoded;
+        return new String(Base64.getDecoder().decode(encoded));
     }
 
     public static String encodeToHex(String raw) {
-        String encoded = Hex.encodeHexString(raw.getBytes());
-        return encoded;
+        return Hex.encodeHexString(raw.getBytes());
     }
 
     public static String decodeFromHex(String encoded) throws DecoderException {
-        String decoded = new String(Hex.decodeHex(encoded));
-        return decoded;
+        return new String(Hex.decodeHex(encoded));
     }
 }
