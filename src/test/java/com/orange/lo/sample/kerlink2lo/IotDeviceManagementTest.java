@@ -1,6 +1,7 @@
 package com.orange.lo.sample.kerlink2lo;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -33,8 +35,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class IotDeviceManagementTest {
 
+    public static final String KER_ACCOUNT = "kerAccount";
     private final String LO_DEVICE_PREFIX = "urn:lo:nsid:x-connector:";
-    private static final String GROUP_NAME = "Test";
+    private static final String GROUP_NAME = KER_ACCOUNT;
 
     @Mock
     private KerlinkApi kerlinkApi;
@@ -56,9 +59,10 @@ public class IotDeviceManagementTest {
         loDeviceCache = new LoDeviceCache();
         loProperties = new LoProperties();
         kerlinkApiMap = new HashMap<String, KerlinkApi>();
-        kerlinkApiMap.put("", kerlinkApi);
+        kerlinkApiMap.put(KER_ACCOUNT, kerlinkApi);
 
         KerlinkProperties kerlinkProperties = new KerlinkProperties();
+        kerlinkProperties.setKerlinkAccountName(KER_ACCOUNT);
         kerlinkPropertiesList = new KerlinkPropertiesList();
         kerlinkPropertiesList.setKerlinkList(Lists.list(kerlinkProperties));
         iotDeviceManagement = new IotDeviceManagement(kerlinkApiMap, loDeviceProvider, externalConnectorService, loProperties, kerlinkPropertiesList, loDeviceCache);
@@ -78,7 +82,7 @@ public class IotDeviceManagementTest {
         iotDeviceManagement.synchronizeDevices();
 
         // then
-        verify(externalConnectorService, times(0)).createDevice(any(), GROUP_NAME);
+        verify(externalConnectorService, times(0)).createDevice(any(), eq(GROUP_NAME));
         verify(externalConnectorService, times(0)).deleteDevice(any());
 
     }
@@ -100,14 +104,14 @@ public class IotDeviceManagementTest {
         doAnswer(invocation -> {
             countDownLatch.countDown();
             return null;
-        }).when(externalConnectorService).createDevice(any(), GROUP_NAME);
+        }).when(externalConnectorService).createDevice(any(), eq(GROUP_NAME));
 
         // when
         iotDeviceManagement.synchronizeDevices();
-        countDownLatch.await();
+        countDownLatch.await(10, TimeUnit.SECONDS);
 
         // then
-        verify(externalConnectorService, times(2)).createDevice(any(), GROUP_NAME);
+        verify(externalConnectorService, times(2)).createDevice(any(), eq(GROUP_NAME));
         verify(externalConnectorService, times(0)).deleteDevice(any());
     }
 
@@ -132,10 +136,10 @@ public class IotDeviceManagementTest {
 
         // when
         iotDeviceManagement.synchronizeDevices();
-        countDownLatch.await();
+        countDownLatch.await(10, TimeUnit.SECONDS);
 
         // then
-        verify(externalConnectorService, times(0)).createDevice(any(), GROUP_NAME);
+        verify(externalConnectorService, times(0)).createDevice(any(), eq(GROUP_NAME));
         verify(externalConnectorService, times(3)).deleteDevice(any());
     }
 
