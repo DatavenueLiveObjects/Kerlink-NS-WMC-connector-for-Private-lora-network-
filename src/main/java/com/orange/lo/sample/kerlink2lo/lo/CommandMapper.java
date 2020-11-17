@@ -1,4 +1,4 @@
-package com.orange.lo.sample.kerlink2lo;
+package com.orange.lo.sample.kerlink2lo.lo;
 
 import java.util.Map;
 import java.util.Optional;

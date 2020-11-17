@@ -7,8 +7,8 @@
 
 package com.orange.lo.sample.kerlink2lo;
 
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.DataDownEventDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.DataUpDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
 import com.orange.lo.sample.kerlink2lo.lo.ExternalConnectorService;
 
 import java.lang.invoke.MethodHandles;

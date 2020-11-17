@@ -22,9 +22,10 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import com.orange.lo.sample.kerlink2lo.lo.model.LoDevice;
+import com.orange.lo.sample.kerlink2lo.lo.model.LoGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -55,7 +56,6 @@ public class LoDeviceProvider {
     private static final String DEVICES_ENDPOINT = "/v1/deviceMgt/devices";
     private static final String GROOUPS_ENDPOINT = "/v1/deviceMgt/groups";
 
-    @Autowired
     public LoDeviceProvider(LoProperties loProperties, KerlinkPropertiesList kerlinkPropertiesList, HttpHeaders authenticationHeaders, @Qualifier("loRestTemplate") RestTemplate restTemplate) {
         this.loProperties = loProperties;
         this.kerlinkPropertiesList = kerlinkPropertiesList;

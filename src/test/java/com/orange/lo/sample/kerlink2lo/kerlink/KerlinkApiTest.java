@@ -1,16 +1,15 @@
-package com.orange.lo.sample.kerlink2lo.kerlink.api;
+package com.orange.lo.sample.kerlink2lo.kerlink;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkProperties;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.DataDownDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.EndDeviceDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.JwtDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.LinkDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.PaginatedDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.EndDeviceDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.JwtDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.LinkDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.PaginatedDto;
 
 import java.net.URI;
 import java.net.URISyntaxException;

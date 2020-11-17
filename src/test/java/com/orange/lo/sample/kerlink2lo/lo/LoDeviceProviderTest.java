@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
 
+import com.orange.lo.sample.kerlink2lo.lo.model.LoDevice;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

@@ -1,4 +1,4 @@
-package com.orange.lo.sample.kerlink2lo.kerlink.api.model;
+package com.orange.lo.sample.kerlink2lo.kerlink.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

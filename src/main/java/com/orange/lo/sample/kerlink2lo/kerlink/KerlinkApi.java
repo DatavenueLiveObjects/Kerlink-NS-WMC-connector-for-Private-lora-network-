@@ -5,15 +5,14 @@
 * LICENSE file in the root directory of this source tree. 
 */
 
-package com.orange.lo.sample.kerlink2lo.kerlink.api;
+package com.orange.lo.sample.kerlink2lo.kerlink;
 
-import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkProperties;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.DataDownDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.EndDeviceDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.JwtDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.LinkDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.PaginatedDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.UserDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.EndDeviceDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.JwtDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.LinkDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.PaginatedDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.UserDto;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -23,7 +22,6 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -46,7 +44,6 @@ public class KerlinkApi {
     private String firstHref;
     private String token;
 
-    @Autowired
     public KerlinkApi(KerlinkProperties kerlinkProperties, @Qualifier("kerlinkRestTemplate") RestTemplate restTemplate) {
         this.kerlinkProperties = kerlinkProperties;
         this.restTemplate = restTemplate;

@@ -9,7 +9,7 @@ package com.orange.lo.sample.kerlink2lo.lo.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.DataUpDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
 
 @JsonInclude(Include.NON_EMPTY)
 public class DataMessage {

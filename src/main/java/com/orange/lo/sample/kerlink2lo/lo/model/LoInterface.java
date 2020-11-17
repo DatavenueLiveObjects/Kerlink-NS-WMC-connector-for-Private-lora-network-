@@ -1,4 +1,4 @@
-package com.orange.lo.sample.kerlink2lo.lo;
+package com.orange.lo.sample.kerlink2lo.lo.model;
 
 import com.orange.lo.sample.kerlink2lo.lo.model.NodeStatus.Capabilities;
 
