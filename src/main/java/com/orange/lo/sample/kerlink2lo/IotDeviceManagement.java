@@ -98,7 +98,7 @@ public class IotDeviceManagement {
             } catch (HttpClientErrorException e) {
                 LOG.error("Error in device synchronization process \n{}", e.getResponseBodyAsString());
             } catch (Exception e) {
-                LOG.error("Error in device synchronization process \n{}", e);
+                LOG.error("Error in device synchronization process \n{} \n {}", e.getMessage(), e);
             }
         });
     }

@@ -18,6 +18,7 @@ import com.orange.lo.sample.kerlink2lo.kerlink.api.model.UserDto;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -38,9 +39,10 @@ import org.springframework.web.client.RestTemplate;
 public class KerlinkApi {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final String NEXT = "next";
     private RestTemplate restTemplate;
     private KerlinkProperties kerlinkProperties;
-    HttpEntity<Void> httpEntity;
+    private HttpEntity<Void> httpEntity;
     private String firstHref;
     private String token;
 
@@ -62,8 +64,9 @@ public class KerlinkApi {
         try {
             ResponseEntity<JwtDto> responseEntity = restTemplate.postForEntity(url, userDto, JwtDto.class);
             if (responseEntity.getStatusCode() == HttpStatus.CREATED) {
-                this.httpEntity = prepareHttpEntity("Bearer " + responseEntity.getBody().getToken());
-                this.token = "Bearer " + responseEntity.getBody().getToken();
+                JwtDto body = responseEntity.getBody();
+                this.token = "Bearer " + (Objects.nonNull(body) ? body.getToken() : "");
+                this.httpEntity = prepareHttpEntity(this.token);
                 LOG.debug("Kerlink Token: {}", this.token);
             } else {
                 LOG.error("Error while trying to login to Kerlink platform, returned status code is {}", responseEntity.getStatusCodeValue());
@@ -94,8 +97,8 @@ public class KerlinkApi {
 
     public Optional<String> sendCommand(DataDownDto dataDownDto) {
         String url = kerlinkProperties.getBaseUrl() + "/application/dataDown";
-        HttpEntity<DataDownDto> httpEntity = prepareHttpEntity(token, dataDownDto);
-        ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, httpEntity, Void.class);
+        HttpEntity<DataDownDto> dataDownDtoHttpEntity = prepareHttpEntity(token, dataDownDto);
+        ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, dataDownDtoHttpEntity, Void.class);
         String commandId = response.getHeaders().getLocation().getPath().substring(22);
         return Optional.of(commandId);
     }
@@ -115,6 +118,6 @@ public class KerlinkApi {
     }
 
     private Optional<String> getNextPageHref(List<LinkDto> links) {
-        return links.stream().filter(l -> "next".equals(l.getRel())).findFirst().map(LinkDto::getHref);
+        return links.stream().filter(l -> NEXT.equals(l.getRel())).findFirst().map(LinkDto::getHref);
     }
 }

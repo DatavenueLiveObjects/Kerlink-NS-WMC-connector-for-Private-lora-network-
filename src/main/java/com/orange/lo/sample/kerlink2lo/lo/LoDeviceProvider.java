@@ -138,7 +138,7 @@ public class LoDeviceProvider {
                 long current = System.currentTimeMillis();
                 try {
                     Thread.sleep(reset - current);
-                } catch (InterruptedException e) {
+                } catch (Exception e) {
                     LOG.error("Exception while getting devices: {}", e.getMessage());
                 }
             }
