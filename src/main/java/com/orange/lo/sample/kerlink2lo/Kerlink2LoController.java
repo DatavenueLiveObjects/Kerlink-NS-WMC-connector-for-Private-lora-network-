@@ -12,6 +12,7 @@ import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
 import com.orange.lo.sample.kerlink2lo.lo.ExternalConnectorService;
 
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
@@ -44,7 +45,7 @@ public class Kerlink2LoController {
     @PostMapping("/dataUp")
     public Callable<ResponseEntity<Void>> dataUp(@RequestBody DataUpDto dataUpDto, @RequestHeader HttpHeaders headers) {
         LOG.debug("received {}", dataUpDto);
-        LOG.debug(headers.get(KERLINK_ACCOUNT_HEADER).get(0));
+        LOG.debug("KerlinkAccountName {}", getKerlinkAccountName(headers));
 
         return () -> {
             Optional<String> kerlinkAccountName = getKerlinkAccountName(headers);
@@ -71,7 +72,9 @@ public class Kerlink2LoController {
     }
 
     private Optional<String> getKerlinkAccountName(HttpHeaders headers) {
-        String name = headers.get(KERLINK_ACCOUNT_HEADER) != null ? headers.get(KERLINK_ACCOUNT_HEADER).get(0) : null;
+
+        List<String> strings = headers.get(KERLINK_ACCOUNT_HEADER);
+        String name = strings != null && !strings.isEmpty() ? strings.get(0) : null;
         return Optional.ofNullable(name);
     }
 

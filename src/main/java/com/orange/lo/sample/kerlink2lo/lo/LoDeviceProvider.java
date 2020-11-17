@@ -70,44 +70,10 @@ public class LoDeviceProvider {
 
     @PostConstruct
     public void postConstruct() {
-        ArrayList<LoGroup> emptyList = new ArrayList<>();
+
         LOG.info("Managing group of devices");
         try {
-            Set<String> kerlinkAccountNames = kerlinkPropertiesList.getKerlinkList().stream().map(KerlinkProperties::getKerlinkAccountName).collect(Collectors.toSet());
-            LOG.debug("Trying to get existing groups");
-
-            int retrievedGroups = 0;
-            for (int offset = 0;; offset++) {
-                try {
-                    ResponseEntity<LoGroup[]> response = restTemplate.exchange(getPagedGroupsUrl(offset), HttpMethod.GET, authenticationEntity, LoGroup[].class);
-                    List<LoGroup> loGroups = Optional.ofNullable(response.getBody())
-                            .map(Arrays::asList)
-                            .orElse(emptyList);
-
-                    retrievedGroups += loGroups.size();
-                    loGroups.forEach(g -> loGroupsMap.put(g.getPathNode(), g.getId()));
-
-                    if (loGroups.isEmpty() || retrievedGroups >= getTotalCount(response)) {
-                        break;
-                    }
-                } catch (HttpClientErrorException e) {
-                    LOG.error("Cannot retrieve information about groups \n {}", e.getResponseBodyAsString());
-                    System.exit(1);
-                }
-            }
-
-            kerlinkAccountNames.forEach(accountName -> {
-                if (!loGroupsMap.containsKey(accountName)) {
-                    LOG.debug("Group {} not found, trying to create new group", accountName);
-                    LoGroup group = new LoGroup(null, accountName);
-                    HttpEntity<LoGroup> httpEntity = new HttpEntity<>(group, authenticationHeaders);
-                    ResponseEntity<LoGroup> response = restTemplate.exchange(loProperties.getApiUrl() + GROOUPS_ENDPOINT, HttpMethod.POST, httpEntity, LoGroup.class);
-                    loGroupsMap.put(accountName, response.getBody().getId());
-                    LOG.debug("Group {} created", accountName);
-                }
-            });
-            LOG.debug("kerlinkAccountNames: {}", kerlinkAccountNames);
-            LOG.debug("existing groups: {}", loGroupsMap);
+            synchronizeGroups();
         } catch (HttpClientErrorException e) {
             LOG.error("Cannot create group \n {}", e.getResponseBodyAsString());
             System.exit(1);
@@ -115,6 +81,45 @@ public class LoDeviceProvider {
             LOG.error("Unexpected error while managing group {}", e.getMessage());
             System.exit(1);
         }
+    }
+
+    private void synchronizeGroups() {
+        ArrayList<LoGroup> emptyList = new ArrayList<>();
+        Set<String> kerlinkAccountNames = kerlinkPropertiesList.getKerlinkList().stream().map(KerlinkProperties::getKerlinkAccountName).collect(Collectors.toSet());
+        LOG.debug("Trying to get existing groups");
+
+        int retrievedGroups = 0;
+        for (int offset = 0;; offset++) {
+            try {
+                ResponseEntity<LoGroup[]> response = restTemplate.exchange(getPagedGroupsUrl(offset), HttpMethod.GET, authenticationEntity, LoGroup[].class);
+                List<LoGroup> loGroups = Optional.ofNullable(response.getBody())
+                        .map(Arrays::asList)
+                        .orElse(emptyList);
+
+                retrievedGroups += loGroups.size();
+                loGroups.forEach(g -> loGroupsMap.put(g.getPathNode(), g.getId()));
+
+                if (loGroups.isEmpty() || retrievedGroups >= getTotalCount(response)) {
+                    break;
+                }
+            } catch (HttpClientErrorException e) {
+                LOG.error("Cannot retrieve information about groups \n {}", e.getResponseBodyAsString());
+                System.exit(1);
+            }
+        }
+
+        kerlinkAccountNames.forEach(accountName -> {
+            if (!loGroupsMap.containsKey(accountName)) {
+                LOG.debug("Group {} not found, trying to create new group", accountName);
+                LoGroup group = new LoGroup(null, accountName);
+                HttpEntity<LoGroup> httpEntity = new HttpEntity<>(group, authenticationHeaders);
+                ResponseEntity<LoGroup> response = restTemplate.exchange(loProperties.getApiUrl() + GROOUPS_ENDPOINT, HttpMethod.POST, httpEntity, LoGroup.class);
+                loGroupsMap.put(accountName, response.getBody().getId());
+                LOG.debug("Group {} created", accountName);
+            }
+        });
+        LOG.debug("kerlinkAccountNames: {}", kerlinkAccountNames);
+        LOG.debug("existing groups: {}", loGroupsMap);
     }
 
     public List<LoDevice> getDevices(String groupName) {
@@ -174,7 +179,8 @@ public class LoDeviceProvider {
         return Integer.parseInt(headerValue);
     }
 
-    private static String getHeaderValue(ResponseEntity<?> response, String xTotalCountHeader) {
-        return response.getHeaders().get(xTotalCountHeader).get(0);
+    private static String getHeaderValue(ResponseEntity<?> response, String headerName) {
+        List<String> strings = response.getHeaders().get(headerName);
+        return strings != null && !strings.isEmpty() ? strings.get(0) : null;
     }
 }

@@ -15,6 +15,7 @@ import com.orange.lo.sample.kerlink2lo.kerlink.model.PaginatedDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.UserDto;
 
 import java.lang.invoke.MethodHandles;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -85,9 +86,11 @@ public class KerlinkApi {
             LOG.trace("Calling kerlink url {}", url);
             ResponseEntity<PaginatedDto<EndDeviceDto>> responseEntity = restTemplate.exchange(url, HttpMethod.GET, httpEntity, returnType);
             PaginatedDto<EndDeviceDto> body = responseEntity.getBody();
-            LOG.trace("And got {} devices", body.getList().size());
-            devicesList.addAll(body.getList());
-            href = getNextPageHref(body.getLinks());
+            if (body != null) {
+                LOG.trace("And got {} devices", body.getList().size());
+                devicesList.addAll(body.getList());
+                href = getNextPageHref(body.getLinks());
+            }
         }
         return devicesList;
     }
@@ -96,8 +99,9 @@ public class KerlinkApi {
         String url = kerlinkProperties.getBaseUrl() + "/application/dataDown";
         HttpEntity<DataDownDto> dataDownDtoHttpEntity = prepareHttpEntity(token, dataDownDto);
         ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, dataDownDtoHttpEntity, Void.class);
-        String commandId = response.getHeaders().getLocation().getPath().substring(22);
-        return Optional.of(commandId);
+        URI location = response.getHeaders().getLocation();
+        String commandId =  location != null ? location.getPath().substring(22) : null;
+        return Optional.ofNullable(commandId);
     }
 
     private HttpEntity<Void> prepareHttpEntity(String token) {
