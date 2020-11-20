@@ -5,24 +5,24 @@
 * LICENSE file in the root directory of this source tree. 
 */
 
-package com.orange.lo.sample.kerlink2lo.kerlink.api;
+package com.orange.lo.sample.kerlink2lo.kerlink;
 
-import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkProperties;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.DataDownDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.EndDeviceDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.JwtDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.LinkDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.PaginatedDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.UserDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.EndDeviceDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.JwtDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.LinkDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.PaginatedDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.UserDto;
 
 import java.lang.invoke.MethodHandles;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -37,14 +37,14 @@ import org.springframework.web.client.RestTemplate;
 @EnableScheduling
 public class KerlinkApi {
 
-    private static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final String NEXT = "next";
     private RestTemplate restTemplate;
     private KerlinkProperties kerlinkProperties;
-    HttpEntity<Void> httpEntity;
+    private HttpEntity<Void> httpEntity;
     private String firstHref;
     private String token;
 
-    @Autowired
     public KerlinkApi(KerlinkProperties kerlinkProperties, @Qualifier("kerlinkRestTemplate") RestTemplate restTemplate) {
         this.kerlinkProperties = kerlinkProperties;
         this.restTemplate = restTemplate;
@@ -62,8 +62,12 @@ public class KerlinkApi {
         try {
             ResponseEntity<JwtDto> responseEntity = restTemplate.postForEntity(url, userDto, JwtDto.class);
             if (responseEntity.getStatusCode() == HttpStatus.CREATED) {
-                this.httpEntity = prepareHttpEntity("Bearer " + responseEntity.getBody().getToken());
-                this.token = "Bearer " + responseEntity.getBody().getToken();
+                JwtDto body = responseEntity.getBody();
+                if(Objects.isNull(body))  {
+                    throw new IllegalArgumentException("Kerlink token is null");
+                }
+                this.token = "Bearer " + body.getToken();
+                this.httpEntity = prepareHttpEntity(this.token);
                 LOG.debug("Kerlink Token: {}", this.token);
             } else {
                 LOG.error("Error while trying to login to Kerlink platform, returned status code is {}", responseEntity.getStatusCodeValue());
@@ -78,45 +82,46 @@ public class KerlinkApi {
     public List<EndDeviceDto> getEndDevices() {
         ParameterizedTypeReference<PaginatedDto<EndDeviceDto>> returnType = new ParameterizedTypeReference<PaginatedDto<EndDeviceDto>>() {
         };
-        List<EndDeviceDto> devicesList = new ArrayList<EndDeviceDto>();
+        List<EndDeviceDto> devicesList = new ArrayList<>();
         Optional<String> href = Optional.of(firstHref);
         while (href.isPresent()) {
             String url = kerlinkProperties.getBaseUrl() + href.get();
             LOG.trace("Calling kerlink url {}", url);
             ResponseEntity<PaginatedDto<EndDeviceDto>> responseEntity = restTemplate.exchange(url, HttpMethod.GET, httpEntity, returnType);
             PaginatedDto<EndDeviceDto> body = responseEntity.getBody();
-            LOG.trace("And got {} devices", body.getList().size());
-            devicesList.addAll(body.getList());
-            href = getNextPageHref(body.getLinks());
+            if (body != null) {
+                LOG.trace("And got {} devices", body.getList().size());
+                devicesList.addAll(body.getList());
+                href = getNextPageHref(body.getLinks());
+            }
         }
         return devicesList;
     }
 
     public Optional<String> sendCommand(DataDownDto dataDownDto) {
         String url = kerlinkProperties.getBaseUrl() + "/application/dataDown";
-        HttpEntity<DataDownDto> httpEntity = prepareHttpEntity(token, dataDownDto);
-        ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, httpEntity, Void.class);
-        String commandId = response.getHeaders().getLocation().getPath().substring(22);
-        return Optional.of(commandId);
+        HttpEntity<DataDownDto> dataDownDtoHttpEntity = prepareHttpEntity(token, dataDownDto);
+        ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, dataDownDtoHttpEntity, Void.class);
+        URI location = response.getHeaders().getLocation();
+        String commandId =  location != null ? location.getPath().substring(22) : null;
+        return Optional.ofNullable(commandId);
     }
 
     private HttpEntity<Void> prepareHttpEntity(String token) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json,application/vnd.kerlink.iot-v1+json");
         headers.set("Authorization", token);
-        HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
-        return httpEntity;
+        return new HttpEntity<>(headers);
     }
 
     private <T> HttpEntity<T> prepareHttpEntity(String token, T t) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
         headers.set("Authorization", token);
-        HttpEntity<T> httpEntity = new HttpEntity<>(t, headers);
-        return httpEntity;
+        return new HttpEntity<>(t, headers);
     }
 
     private Optional<String> getNextPageHref(List<LinkDto> links) {
-        return links.stream().filter(l -> "next".equals(l.getRel())).findFirst().map(l -> l.getHref());
+        return links.stream().filter(l -> NEXT.equals(l.getRel())).findFirst().map(LinkDto::getHref);
     }
 }

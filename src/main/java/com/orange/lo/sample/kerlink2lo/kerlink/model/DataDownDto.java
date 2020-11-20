@@ -1,4 +1,4 @@
-package com.orange.lo.sample.kerlink2lo.kerlink.api.model;
+package com.orange.lo.sample.kerlink2lo.kerlink.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -80,7 +80,4 @@ public class DataDownDto {
         return "DataDownDto [fPort=" + fPort + ", endDevice=" + endDevice + ", payload=" + payload + ", contentType=" + contentType + ", confirmed=" + confirmed + ", ttl=" + ttl + ", maxAttempts=" + maxAttempts + "]";
     }
 
-//    @Override public String toString() {
-//        return "DataDownDto [fPort=" + fPort + ", endDevice=" + endDevice + ", payload=" + payload + ", contentType=" + contentType + "]";
-//    }
 }

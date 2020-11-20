@@ -1,4 +1,4 @@
-package com.orange.lo.sample.kerlink2lo;
+package com.orange.lo.sample.kerlink2lo.lo;
 
 import java.util.Map;
 import java.util.Optional;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class CommandMapper {
 
-    private static Map<String, LoCommand> map = new ConcurrentHashMap<String, LoCommand>();
+    private static Map<String, LoCommand> map = new ConcurrentHashMap<>();
     
     public void put(String kerlinkId, String loId, String nodeId) {
         map.put(kerlinkId, new LoCommand(loId, nodeId));

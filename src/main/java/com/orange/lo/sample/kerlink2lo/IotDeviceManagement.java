@@ -8,8 +8,10 @@
 package com.orange.lo.sample.kerlink2lo;
 
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.KerlinkApi;
+import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkApi;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.EndDeviceDto;
 import com.orange.lo.sample.kerlink2lo.lo.ExternalConnectorService;
+import com.orange.lo.sample.kerlink2lo.lo.model.LoDevice;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceCache;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceProvider;
 import com.orange.lo.sample.kerlink2lo.lo.LoProperties;
@@ -34,7 +36,7 @@ import org.springframework.web.client.HttpClientErrorException;
 @Component
 public class IotDeviceManagement {
 
-    private static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private LoProperties loProperties;
     private KerlinkPropertiesList kerlinkPropertiesList;
@@ -53,29 +55,29 @@ public class IotDeviceManagement {
     }
 
     @Scheduled(fixedRateString = "${lo.synchronization-device-interval}")
-    public void synchronizeDevices() throws InterruptedException {
+    public void synchronizeDevices() {
         kerlinkPropertiesList.getKerlinkList().forEach(kerlinkProperties -> {
             String kerlinkAccountName = kerlinkProperties.getKerlinkAccountName();
             LOG.info("Synchronizing devices for group {}", kerlinkAccountName);
 
             try {
-                Set<String> kerlinkIds = kerlinkApiMap.get(kerlinkProperties.getKerlinkAccountName()).getEndDevices().stream().map(d -> d.getDevEui()).collect(Collectors.toSet());
+                Set<String> kerlinkIds = kerlinkApiMap.get(kerlinkProperties.getKerlinkAccountName()).getEndDevices().stream().map(EndDeviceDto::getDevEui).collect(Collectors.toSet());
                 LOG.debug("Got {} devices from Kerlink", kerlinkIds.size());
 
-                Set<String> loIds = loDeviceProvider.getDevices(kerlinkAccountName).stream().map(d -> d.getId()).collect(Collectors.toSet());
+                Set<String> loIds = loDeviceProvider.getDevices(kerlinkAccountName).stream().map(LoDevice::getId).collect(Collectors.toSet());
                 LOG.debug("Got {} devices from LO", loIds.size());
                 Set<String> loIdsWithoutPrefix = loIds.stream().map(loId -> loId.substring(loProperties.getDevicePrefix().length())).collect(Collectors.toSet());
                 deviceCache.addAll(loIdsWithoutPrefix, kerlinkAccountName);
 
                 // add devices to LO
-                Set<String> devicesToAddToLo = new HashSet<String>(kerlinkIds);
+                Set<String> devicesToAddToLo = new HashSet<>(kerlinkIds);
                 devicesToAddToLo.removeAll(loIdsWithoutPrefix);
-                LOG.debug("Devices to add to LO: {}", devicesToAddToLo.toString());
+                LOG.debug("Devices to add to LO: {}", devicesToAddToLo);
 
                 // remove devices from LO
-                Set<String> devicesToRemoveFromLo = new HashSet<String>(loIds);
+                Set<String> devicesToRemoveFromLo = new HashSet<>(loIds);
                 devicesToRemoveFromLo.removeAll(kerlinkIds.stream().map(kerlinkId -> loProperties.getDevicePrefix() + kerlinkId).collect(Collectors.toSet()));
-                LOG.debug("Devices to remove from LO: {}", devicesToRemoveFromLo.toString());
+                LOG.debug("Devices to remove from LO: {}", devicesToRemoveFromLo);
 
                 if (devicesToAddToLo.size() + devicesToRemoveFromLo.size() > 0) {
                     ThreadPoolExecutor synchronizingExecutor = new ThreadPoolExecutor(loProperties.getSynchronizationThreadPoolSize(), loProperties.getSynchronizationThreadPoolSize(), 10, TimeUnit.SECONDS, new ArrayBlockingQueue<>(devicesToAddToLo.size() + devicesToRemoveFromLo.size()));
@@ -96,7 +98,7 @@ public class IotDeviceManagement {
             } catch (HttpClientErrorException e) {
                 LOG.error("Error in device synchronization process \n{}", e.getResponseBodyAsString());
             } catch (Exception e) {
-                LOG.error("Error in device synchronization process \n{}", e);
+                LOG.error("Error in device synchronization process \n{} \n {}", e.getMessage(), e);
             }
         });
     }

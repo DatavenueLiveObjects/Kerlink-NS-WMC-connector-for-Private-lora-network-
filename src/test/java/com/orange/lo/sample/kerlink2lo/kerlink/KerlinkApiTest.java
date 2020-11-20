@@ -1,16 +1,15 @@
-package com.orange.lo.sample.kerlink2lo.kerlink.api;
+package com.orange.lo.sample.kerlink2lo.kerlink;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkProperties;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.DataDownDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.EndDeviceDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.JwtDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.LinkDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.api.model.PaginatedDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.EndDeviceDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.JwtDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.LinkDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.PaginatedDto;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -38,6 +37,7 @@ import org.springframework.web.client.RestTemplate;
 @RunWith(MockitoJUnitRunner.class)
 public class KerlinkApiTest {
 
+    public static final String TOKEN = "abcdef";
     @Mock
     RestTemplate restTemplate;
 
@@ -45,6 +45,11 @@ public class KerlinkApiTest {
 
     @Before
     public void setUp() {
+
+        ResponseEntity<JwtDto> loginResponse = getLoginResponse(TOKEN);
+        when(restTemplate.postForEntity(eq("localhost/application/login"), any(), eq(JwtDto.class)))
+                .thenReturn(loginResponse);
+
         KerlinkProperties kerlinkProperties = new KerlinkProperties();
         kerlinkProperties.setBaseUrl("localhost");
         kerlinkProperties.setPageSize(10);
@@ -97,13 +102,11 @@ public class KerlinkApiTest {
     public void shouldLoginAndSendCommand() throws RestClientException, URISyntaxException {
         // given
         String commandId = "123456";
-        String token = "abcdef";
 
         DataDownDto dataDownDto = new DataDownDto();
         dataDownDto.setPayload("command");
 
-        when(restTemplate.postForEntity(eq("localhost/application/login"), any(), eq(JwtDto.class))).thenReturn(getLoginResponse(token));
-        when(restTemplate.exchange(eq("localhost/application/dataDown"), eq(HttpMethod.POST), eq(getSendCommandHttpEntity(token, dataDownDto)), eq(Void.class))).thenReturn(getCommandResponse(commandId));
+        when(restTemplate.exchange(eq("localhost/application/dataDown"), eq(HttpMethod.POST), eq(getSendCommandHttpEntity(TOKEN, dataDownDto)), eq(Void.class))).thenReturn(getCommandResponse(commandId));
 
         // when
         kerlinkApi.login();

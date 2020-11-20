@@ -7,8 +7,6 @@
 
 package com.orange.lo.sample.kerlink2lo.kerlink;
 
-import com.orange.lo.sample.kerlink2lo.kerlink.api.KerlinkApi;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,11 +16,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
 @Configuration
-public class KerlinkConfiguration {
+public class KerlinkConfig {
 
     private KerlinkPropertiesList kerlinkPropertiesList;
 
-    public KerlinkConfiguration(KerlinkPropertiesList kerlinkPropertiesList) {
+    public KerlinkConfig(KerlinkPropertiesList kerlinkPropertiesList) {
         this.kerlinkPropertiesList = kerlinkPropertiesList;
     }
 
@@ -37,10 +35,11 @@ public class KerlinkConfiguration {
 
     @Bean
     public Map<String, KerlinkApi> kerlinkApiMap() {
-        Map<String, KerlinkApi> map = new HashMap<String, KerlinkApi>();
-        kerlinkPropertiesList.getKerlinkList().forEach(kerlinkProperties -> {
-            map.put(kerlinkProperties.getKerlinkAccountName(), new KerlinkApi(kerlinkProperties, restTemplate()));
-        });
+        Map<String, KerlinkApi> map = new HashMap<>();
+        kerlinkPropertiesList.getKerlinkList().forEach(kerlinkProperties -> map.put(
+                kerlinkProperties.getKerlinkAccountName(),
+                new KerlinkApi(kerlinkProperties, restTemplate())
+        ));
         return map;
     }
 }

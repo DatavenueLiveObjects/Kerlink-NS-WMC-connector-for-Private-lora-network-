@@ -5,7 +5,7 @@
 * LICENSE file in the root directory of this source tree. 
 */
 
-package com.orange.lo.sample.kerlink2lo.lo;
+package com.orange.lo.sample.kerlink2lo.lo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.orange.lo.sample.kerlink2lo.lo.model.NodeStatus.Capabilities;
@@ -31,7 +31,7 @@ public class LoDevice {
         LoInterface loInterface = new LoInterface(); 
         loInterface.setConnector("x-connector");
         loInterface.setDefinition(new Definition(id));
-        loInterface.setCapabilities(new Capabilities(true));
+        loInterface.setCapabilities(new Capabilities(commandAvailable));
         this.interfaces = Collections.singletonList(loInterface);        
     }
     

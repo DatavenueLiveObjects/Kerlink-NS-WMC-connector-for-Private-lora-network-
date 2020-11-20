@@ -5,7 +5,7 @@
 * LICENSE file in the root directory of this source tree. 
 */
 
-package com.orange.lo.sample.kerlink2lo.kerlink.api.model;
+package com.orange.lo.sample.kerlink2lo.kerlink.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
