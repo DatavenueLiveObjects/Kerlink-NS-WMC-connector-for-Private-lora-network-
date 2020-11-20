@@ -63,7 +63,10 @@ public class KerlinkApi {
             ResponseEntity<JwtDto> responseEntity = restTemplate.postForEntity(url, userDto, JwtDto.class);
             if (responseEntity.getStatusCode() == HttpStatus.CREATED) {
                 JwtDto body = responseEntity.getBody();
-                this.token = "Bearer " + (Objects.nonNull(body) ? body.getToken() : "");
+                if(Objects.isNull(body))  {
+                    throw new IllegalArgumentException("Kerlink token is null");
+                }
+                this.token = "Bearer " + body.getToken();
                 this.httpEntity = prepareHttpEntity(this.token);
                 LOG.debug("Kerlink Token: {}", this.token);
             } else {
