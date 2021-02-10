@@ -18,6 +18,7 @@ import java.util.concurrent.Callable;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.orange.lo.sample.kerlink2lo.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -45,10 +46,10 @@ public class Kerlink2LoController {
     @PostMapping("/dataUp")
     public Callable<ResponseEntity<Void>> dataUp(@RequestBody DataUpDto dataUpDto, @RequestHeader HttpHeaders headers) {
         LOG.debug("received {}", dataUpDto);
-        LOG.debug("KerlinkAccountName {}", getKerlinkAccountName(headers));
+        Optional<String> kerlinkAccountName = getKerlinkAccountName(headers);
+        LOG.debug("KerlinkAccountName {}", StringUtils.sanitize(kerlinkAccountName.orElse("")));
 
         return () -> {
-            Optional<String> kerlinkAccountName = getKerlinkAccountName(headers);
             if (kerlinkAccountName.isPresent()) {
                 externalConnectorService.sendMessage(dataUpDto, kerlinkAccountName.get());
                 return ResponseEntity.ok().build();
