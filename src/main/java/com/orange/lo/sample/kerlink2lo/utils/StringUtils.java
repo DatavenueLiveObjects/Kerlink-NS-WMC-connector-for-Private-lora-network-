@@ -6,6 +6,8 @@ public class StringUtils {
     }
 
     public static String sanitize(String message) {
-        return message.replaceAll("\\r\\n|\\r|\\n", " ");
+        return message.replaceAll("\n", "\\n")
+                .replaceAll("\r", "\\r")
+                .replaceAll("\t", "\\t");
     }
 }
