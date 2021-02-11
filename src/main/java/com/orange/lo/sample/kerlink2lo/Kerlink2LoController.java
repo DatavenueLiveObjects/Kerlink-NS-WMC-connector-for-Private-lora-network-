@@ -47,7 +47,7 @@ public class Kerlink2LoController {
     public Callable<ResponseEntity<Void>> dataUp(@RequestBody DataUpDto dataUpDto, @RequestHeader HttpHeaders headers) {
         LOG.debug("received {}", StringEscapeUtils.escapeJava(dataUpDto.toString()));
         Optional<String> kerlinkAccountName = getKerlinkAccountName(headers);
-        LOG.debug("KerlinkAccountName {}", StringEscapeUtils.escapeJava(kerlinkAccountName.orElse("")));
+        LOG.debug("KerlinkAccountName {}", kerlinkAccountName);
 
         return () -> {
             if (kerlinkAccountName.isPresent()) {
@@ -75,7 +75,7 @@ public class Kerlink2LoController {
     private Optional<String> getKerlinkAccountName(HttpHeaders headers) {
 
         List<String> strings = headers.get(KERLINK_ACCOUNT_HEADER);
-        String name = strings != null && !strings.isEmpty() ? strings.get(0) : null;
+        String name = strings != null && !strings.isEmpty() ? StringEscapeUtils.escapeJava(strings.get(0)) : null;
         return Optional.ofNullable(name);
     }
 

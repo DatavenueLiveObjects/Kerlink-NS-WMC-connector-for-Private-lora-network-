@@ -9,9 +9,7 @@ package com.orange.lo.sample.kerlink2lo;
 
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkApi;
-import com.orange.lo.sample.kerlink2lo.kerlink.model.EndDeviceDto;
 import com.orange.lo.sample.kerlink2lo.lo.ExternalConnectorService;
-import com.orange.lo.sample.kerlink2lo.lo.model.LoDevice;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceCache;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceProvider;
 import com.orange.lo.sample.kerlink2lo.lo.LoProperties;
@@ -25,6 +23,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -61,10 +60,17 @@ public class IotDeviceManagement {
             LOG.info("Synchronizing devices for group {}", kerlinkAccountName);
 
             try {
-                Set<String> kerlinkIds = kerlinkApiMap.get(kerlinkProperties.getKerlinkAccountName()).getEndDevices().stream().map(EndDeviceDto::getDevEui).collect(Collectors.toSet());
+                Set<String> kerlinkIds = kerlinkApiMap.get(kerlinkProperties.getKerlinkAccountName())
+                        .getEndDevices()
+                        .stream()
+                        .map(endDeviceDto -> StringEscapeUtils.escapeJava(endDeviceDto.getDevEui()))
+                        .collect(Collectors.toSet());
                 LOG.debug("Got {} devices from Kerlink", kerlinkIds.size());
 
-                Set<String> loIds = loDeviceProvider.getDevices(kerlinkAccountName).stream().map(LoDevice::getId).collect(Collectors.toSet());
+                Set<String> loIds = loDeviceProvider.getDevices(kerlinkAccountName)
+                        .stream()
+                        .map(loDevice -> StringEscapeUtils.escapeJava(loDevice.getId()))
+                        .collect(Collectors.toSet());
                 LOG.debug("Got {} devices from LO", loIds.size());
                 Set<String> loIdsWithoutPrefix = loIds.stream().map(loId -> loId.substring(loProperties.getDevicePrefix().length())).collect(Collectors.toSet());
                 deviceCache.addAll(loIdsWithoutPrefix, kerlinkAccountName);
