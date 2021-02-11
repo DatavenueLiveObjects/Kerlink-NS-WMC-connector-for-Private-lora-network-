@@ -102,7 +102,9 @@ public class ExternalConnector {
     }
 
     public void sendStatus(String devEui) {
-        LOG.debug("Sending status message for device {}", devEui);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Sending status message for device {}", StringEscapeUtils.escapeJava(devEui));
+        }
 
         NodeStatus nodeStatus = new NodeStatus();
         nodeStatus.setStatus("ONLINE");
@@ -124,7 +126,10 @@ public class ExternalConnector {
             MqttMessage msg = prepareMqttMessgae(commandResponse);
             publish(COMMAND_RESPONSE_TOPIC, msg);
         } else {
-            LOG.debug("Receive unknow command status from Kerlink: {}",  StringEscapeUtils.escapeJava(dataDownEventDto.toString()));
+            if (LOG.isDebugEnabled()) {
+                String cleanDtoString = StringEscapeUtils.escapeJava(dataDownEventDto.toString());
+                LOG.debug("Receive unknow command status from Kerlink: {}", cleanDtoString);
+            }
         }
     }
 

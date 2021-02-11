@@ -21,6 +21,7 @@ It can be only one instance of connector. Two or more instances connected to to 
 * Spring Boot 2.1.8.RELEASE
 * Eclipse Paho 1.2.0
 * Apache HttpComponents Client 4.5.9
+* Apache Commons Text 1.9
 
 ## Configuration
 All configuration can be found in **application.yaml** file located in src/main/resources

@@ -9,6 +9,7 @@ package com.orange.lo.sample.kerlink2lo;
 
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkApi;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.EndDeviceDto;
 import com.orange.lo.sample.kerlink2lo.lo.ExternalConnectorService;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceCache;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceProvider;
@@ -23,6 +24,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.orange.lo.sample.kerlink2lo.lo.model.LoDevice;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,13 +65,13 @@ public class IotDeviceManagement {
                 Set<String> kerlinkIds = kerlinkApiMap.get(kerlinkProperties.getKerlinkAccountName())
                         .getEndDevices()
                         .stream()
-                        .map(endDeviceDto -> StringEscapeUtils.escapeJava(endDeviceDto.getDevEui()))
+                        .map(EndDeviceDto::getDevEui)
                         .collect(Collectors.toSet());
                 LOG.debug("Got {} devices from Kerlink", kerlinkIds.size());
 
                 Set<String> loIds = loDeviceProvider.getDevices(kerlinkAccountName)
                         .stream()
-                        .map(loDevice -> StringEscapeUtils.escapeJava(loDevice.getId()))
+                        .map(LoDevice::getId)
                         .collect(Collectors.toSet());
                 LOG.debug("Got {} devices from LO", loIds.size());
                 Set<String> loIdsWithoutPrefix = loIds.stream().map(loId -> loId.substring(loProperties.getDevicePrefix().length())).collect(Collectors.toSet());
@@ -91,13 +93,16 @@ public class IotDeviceManagement {
                     for (String deviceId : devicesToAddToLo) {
                         synchronizingExecutor.execute(() -> {
                             externalConnectorService.createDevice(deviceId, kerlinkAccountName);
-                            LOG.debug("Device created for {}", deviceId);
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("Device created for {}", StringEscapeUtils.escapeJava(deviceId));
+                            }
                         });
                     }
                     for (String deviceId : devicesToRemoveFromLo) {
                         synchronizingExecutor.execute(() -> {
-                            externalConnectorService.deleteDevice(deviceId);
-                            LOG.debug("Device deleted for {}", deviceId);
+                            String cleanDeviceId = StringEscapeUtils.escapeJava(deviceId);
+                            externalConnectorService.deleteDevice(cleanDeviceId);
+                            LOG.debug("Device deleted for {}", cleanDeviceId);
                         });
                     }
                 }

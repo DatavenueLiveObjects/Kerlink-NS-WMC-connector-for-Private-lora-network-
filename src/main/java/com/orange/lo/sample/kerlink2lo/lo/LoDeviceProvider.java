@@ -24,6 +24,7 @@ import javax.annotation.PostConstruct;
 
 import com.orange.lo.sample.kerlink2lo.lo.model.LoDevice;
 import com.orange.lo.sample.kerlink2lo.lo.model.LoGroup;
+import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -153,7 +154,10 @@ public class LoDeviceProvider {
     }
 
     public void addDevice(String deviceId, String kerlinkAccountName) {
-        LOG.trace("Trying to add device {} to LO group {}", deviceId, kerlinkAccountName);
+        if (LOG.isDebugEnabled()) {
+            LOG.trace("Trying to add device {} to LO group {}", StringEscapeUtils.escapeJava(deviceId),
+                    StringEscapeUtils.escapeJava(kerlinkAccountName));
+        }
 
         LoDevice device = new LoDevice(deviceId, loGroupsMap.get(kerlinkAccountName), loProperties.getDevicePrefix(), true);
         HttpEntity<LoDevice> httpEntity = new HttpEntity<>(device, authenticationHeaders);

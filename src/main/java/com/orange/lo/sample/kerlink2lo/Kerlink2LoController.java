@@ -45,7 +45,9 @@ public class Kerlink2LoController {
 
     @PostMapping("/dataUp")
     public Callable<ResponseEntity<Void>> dataUp(@RequestBody DataUpDto dataUpDto, @RequestHeader HttpHeaders headers) {
-        LOG.debug("received {}", StringEscapeUtils.escapeJava(dataUpDto.toString()));
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("received {}", StringEscapeUtils.escapeJava(dataUpDto.toString()));
+        }
         Optional<String> kerlinkAccountName = getKerlinkAccountName(headers);
         LOG.debug("KerlinkAccountName {}", kerlinkAccountName);
 
@@ -61,7 +63,9 @@ public class Kerlink2LoController {
 
     @PostMapping("/dataDownEvent")
     public Callable<ResponseEntity<Void>> dataDown(@RequestBody DataDownEventDto dataDownEventDto, @RequestHeader HttpHeaders headers) {
-        LOG.debug("received command response {}", StringEscapeUtils.escapeJava(dataDownEventDto.toString()));
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("received command response {}", StringEscapeUtils.escapeJava(dataDownEventDto.toString()));
+        }
         return () -> {
             if ("OK".equals(dataDownEventDto.getStatus())) {
                 externalConnectorService.sendCommandResponse(dataDownEventDto);
@@ -75,8 +79,9 @@ public class Kerlink2LoController {
     private Optional<String> getKerlinkAccountName(HttpHeaders headers) {
 
         List<String> strings = headers.get(KERLINK_ACCOUNT_HEADER);
-        String name = strings != null && !strings.isEmpty() ? StringEscapeUtils.escapeJava(strings.get(0)) : null;
-        return Optional.ofNullable(name);
+        String name = strings != null && !strings.isEmpty() ? strings.get(0) : null;
+        String cleanName = StringEscapeUtils.escapeJava(name);
+        return Optional.ofNullable(cleanName);
     }
 
     @ExceptionHandler(HttpClientErrorException.class)
