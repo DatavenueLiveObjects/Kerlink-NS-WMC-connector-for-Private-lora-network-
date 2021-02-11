@@ -34,6 +34,7 @@ import javax.annotation.PostConstruct;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -123,7 +124,7 @@ public class ExternalConnector {
             MqttMessage msg = prepareMqttMessgae(commandResponse);
             publish(COMMAND_RESPONSE_TOPIC, msg);
         } else {
-            LOG.debug("Receive unknow command status from Kerlink: {}", dataDownEventDto);
+            LOG.debug("Receive unknow command status from Kerlink: {}",  StringEscapeUtils.escapeJava(dataDownEventDto.toString()));
         }
     }
 

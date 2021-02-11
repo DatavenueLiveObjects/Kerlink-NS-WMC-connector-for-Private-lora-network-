@@ -61,7 +61,7 @@ public class Kerlink2LoController {
 
     @PostMapping("/dataDownEvent")
     public Callable<ResponseEntity<Void>> dataDown(@RequestBody DataDownEventDto dataDownEventDto, @RequestHeader HttpHeaders headers) {
-        LOG.debug("received command response {}", dataDownEventDto);
+        LOG.debug("received command response {}", StringEscapeUtils.escapeJava(dataDownEventDto.toString()));
         return () -> {
             if ("OK".equals(dataDownEventDto.getStatus())) {
                 externalConnectorService.sendCommandResponse(dataDownEventDto);
