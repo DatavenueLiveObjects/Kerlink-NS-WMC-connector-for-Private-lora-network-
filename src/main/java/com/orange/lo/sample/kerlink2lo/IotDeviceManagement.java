@@ -65,13 +65,13 @@ public class IotDeviceManagement {
                 Set<String> kerlinkIds = kerlinkApiMap.get(kerlinkProperties.getKerlinkAccountName())
                         .getEndDevices()
                         .stream()
-                        .map(EndDeviceDto::getDevEui)
+                        .map(endDeviceDto -> StringEscapeUtils.escapeJava(endDeviceDto.getDevEui()))
                         .collect(Collectors.toSet());
                 LOG.debug("Got {} devices from Kerlink", kerlinkIds.size());
 
                 Set<String> loIds = loDeviceProvider.getDevices(kerlinkAccountName)
                         .stream()
-                        .map(LoDevice::getId)
+                        .map(loDevice -> StringEscapeUtils.escapeJava(loDevice.getId()))
                         .collect(Collectors.toSet());
                 LOG.debug("Got {} devices from LO", loIds.size());
                 Set<String> loIdsWithoutPrefix = loIds.stream().map(loId -> loId.substring(loProperties.getDevicePrefix().length())).collect(Collectors.toSet());
@@ -100,9 +100,10 @@ public class IotDeviceManagement {
                     }
                     for (String deviceId : devicesToRemoveFromLo) {
                         synchronizingExecutor.execute(() -> {
-                            String cleanDeviceId = StringEscapeUtils.escapeJava(deviceId);
-                            externalConnectorService.deleteDevice(cleanDeviceId);
-                            LOG.debug("Device deleted for {}", cleanDeviceId);
+                            externalConnectorService.deleteDevice(deviceId);
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("Device deleted for {}", StringEscapeUtils.escapeJava(deviceId));
+                            }
                         });
                     }
                 }

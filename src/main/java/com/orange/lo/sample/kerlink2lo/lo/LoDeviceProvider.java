@@ -166,7 +166,9 @@ public class LoDeviceProvider {
     }
 
     public void deleteDevice(String deviceId) {
-        LOG.trace("Trying to delete device {} from LO", deviceId);
+        if (LOG.isDebugEnabled()) {
+            LOG.trace("Trying to delete device {} from LO", StringEscapeUtils.escapeJava(deviceId));
+        }
         restTemplate.exchange(loProperties.getApiUrl() + DEVICES_ENDPOINT + "/" + deviceId, HttpMethod.DELETE, authenticationEntity, Void.class);
     }
 

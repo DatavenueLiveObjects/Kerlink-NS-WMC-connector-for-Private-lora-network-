@@ -45,11 +45,11 @@ public class Kerlink2LoController {
 
     @PostMapping("/dataUp")
     public Callable<ResponseEntity<Void>> dataUp(@RequestBody DataUpDto dataUpDto, @RequestHeader HttpHeaders headers) {
+        Optional<String> kerlinkAccountName = getKerlinkAccountName(headers);
         if (LOG.isDebugEnabled()) {
+            LOG.debug("KerlinkAccountName {}", StringEscapeUtils.escapeJava(kerlinkAccountName.orElse("")));
             LOG.debug("received {}", StringEscapeUtils.escapeJava(dataUpDto.toString()));
         }
-        Optional<String> kerlinkAccountName = getKerlinkAccountName(headers);
-        LOG.debug("KerlinkAccountName {}", kerlinkAccountName);
 
         return () -> {
             if (kerlinkAccountName.isPresent()) {
