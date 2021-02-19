@@ -103,7 +103,7 @@ public class ExternalConnector {
 
     public void sendStatus(String devEui) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Sending status message for device {}", StringEscapeUtils.escapeJava(devEui));
+            LOG.debug("Sending status message for device {}", StringEscapeUtils.escapeHtml4(devEui));
         }
 
         NodeStatus nodeStatus = new NodeStatus();

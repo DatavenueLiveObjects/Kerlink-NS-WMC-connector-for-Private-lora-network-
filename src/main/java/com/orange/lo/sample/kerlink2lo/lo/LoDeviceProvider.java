@@ -154,9 +154,10 @@ public class LoDeviceProvider {
     }
 
     public void addDevice(String deviceId, String kerlinkAccountName) {
-        if (LOG.isDebugEnabled()) {
-            LOG.trace("Trying to add device {} to LO group {}", StringEscapeUtils.escapeJava(deviceId),
-                    StringEscapeUtils.escapeJava(kerlinkAccountName));
+        if (LOG.isTraceEnabled()) {
+            String cleanDeviceId = StringEscapeUtils.escapeHtml4(deviceId);
+            String clearAccountName = StringEscapeUtils.escapeHtml4(kerlinkAccountName);
+            LOG.trace("Trying to add device {} to LO group {}", cleanDeviceId, clearAccountName);
         }
 
         LoDevice device = new LoDevice(deviceId, loGroupsMap.get(kerlinkAccountName), loProperties.getDevicePrefix(), true);
@@ -166,8 +167,8 @@ public class LoDeviceProvider {
     }
 
     public void deleteDevice(String deviceId) {
-        if (LOG.isDebugEnabled()) {
-            LOG.trace("Trying to delete device {} from LO", StringEscapeUtils.escapeJava(deviceId));
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Trying to delete device {} from LO", StringEscapeUtils.escapeHtml4(deviceId));
         }
         restTemplate.exchange(loProperties.getApiUrl() + DEVICES_ENDPOINT + "/" + deviceId, HttpMethod.DELETE, authenticationEntity, Void.class);
     }

@@ -94,7 +94,7 @@ public class IotDeviceManagement {
                         synchronizingExecutor.execute(() -> {
                             externalConnectorService.createDevice(deviceId, kerlinkAccountName);
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug("Device created for {}", StringEscapeUtils.escapeJava(deviceId));
+                                LOG.debug("Device created for {}", StringEscapeUtils.escapeHtml4(deviceId));
                             }
                         });
                     }
@@ -102,7 +102,7 @@ public class IotDeviceManagement {
                         synchronizingExecutor.execute(() -> {
                             externalConnectorService.deleteDevice(deviceId);
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug("Device deleted for {}", StringEscapeUtils.escapeJava(deviceId));
+                                LOG.debug("Device deleted for {}", StringEscapeUtils.escapeHtml4(deviceId));
                             }
                         });
                     }
