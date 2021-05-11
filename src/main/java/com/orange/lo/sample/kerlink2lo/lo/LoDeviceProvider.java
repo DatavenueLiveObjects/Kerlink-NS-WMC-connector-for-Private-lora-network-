@@ -35,10 +35,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class LoDeviceProvider {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private final String apiUrl;
+    private final int pageSize = 10;
 
     private RestTemplate restTemplate;
     private LoProperties loProperties;
@@ -56,6 +60,7 @@ public class LoDeviceProvider {
 
     private static final String DEVICES_ENDPOINT = "/v1/deviceMgt/devices";
     private static final String GROOUPS_ENDPOINT = "/v1/deviceMgt/groups";
+    private static final String devicePrefix = "urn:lo:nsid:x-connector:";
 
     public LoDeviceProvider(LoProperties loProperties, KerlinkPropertiesList kerlinkPropertiesList, HttpHeaders authenticationHeaders, @Qualifier("loRestTemplate") RestTemplate restTemplate) {
         this.loProperties = loProperties;
@@ -65,8 +70,9 @@ public class LoDeviceProvider {
 
         this.loGroupsMap = new HashMap<>();
         this.authenticationEntity = new HttpEntity<>(authenticationHeaders);
-        this.devicesPagedUrlTemplate = loProperties.getApiUrl() + DEVICES_ENDPOINT + "?limit=" + loProperties.getPageSize() + "&offset=%d&groupId=%s&fields=id,name,group";
-        this.groupsPagedUrlTemplate = loProperties.getApiUrl() + GROOUPS_ENDPOINT + "?limit=" + loProperties.getPageSize() + "&offset=" + "%d";
+        apiUrl = UriComponentsBuilder.newInstance().scheme("https").host(loProperties.getHostname()).path("api").build().toUriString();
+        this.devicesPagedUrlTemplate = this.apiUrl + DEVICES_ENDPOINT + "?limit=" + this.pageSize + "&offset=%d&groupId=%s&fields=id,name,group";
+        this.groupsPagedUrlTemplate = this.apiUrl + GROOUPS_ENDPOINT + "?limit=" + this.pageSize + "&offset=" + "%d";
     }
 
     @PostConstruct
@@ -114,7 +120,7 @@ public class LoDeviceProvider {
                 LOG.debug("Group {} not found, trying to create new group", accountName);
                 LoGroup group = new LoGroup(null, accountName);
                 HttpEntity<LoGroup> httpEntity = new HttpEntity<>(group, authenticationHeaders);
-                ResponseEntity<LoGroup> response = restTemplate.exchange(loProperties.getApiUrl() + GROOUPS_ENDPOINT, HttpMethod.POST, httpEntity, LoGroup.class);
+                ResponseEntity<LoGroup> response = restTemplate.exchange(apiUrl + GROOUPS_ENDPOINT, HttpMethod.POST, httpEntity, LoGroup.class);
                 loGroupsMap.put(accountName, response.getBody().getId());
                 LOG.debug("Group {} created", accountName);
             }
@@ -124,7 +130,7 @@ public class LoDeviceProvider {
     }
 
     public List<LoDevice> getDevices(String groupName) {
-        List<LoDevice> devices = new ArrayList<>(loProperties.getPageSize());
+        List<LoDevice> devices = new ArrayList<>(pageSize);
         ArrayList<LoDevice> emptyList = new ArrayList<>();
 
         for (int offset = 0;; offset++) {
@@ -160,25 +166,25 @@ public class LoDeviceProvider {
             LOG.trace("Trying to add device {} to LO group {}", cleanDeviceId, clearAccountName);
         }
 
-        LoDevice device = new LoDevice(deviceId, loGroupsMap.get(kerlinkAccountName), loProperties.getDevicePrefix(), true);
+        LoDevice device = new LoDevice(deviceId, loGroupsMap.get(kerlinkAccountName), devicePrefix, true);
         HttpEntity<LoDevice> httpEntity = new HttpEntity<>(device, authenticationHeaders);
 
-        restTemplate.exchange(loProperties.getApiUrl() + DEVICES_ENDPOINT, HttpMethod.POST, httpEntity, Void.class);
+        restTemplate.exchange(apiUrl + DEVICES_ENDPOINT, HttpMethod.POST, httpEntity, Void.class);
     }
 
     public void deleteDevice(String deviceId) {
         if (LOG.isTraceEnabled()) {
             LOG.trace("Trying to delete device {} from LO", StringEscapeUtils.escapeHtml4(deviceId));
         }
-        restTemplate.exchange(loProperties.getApiUrl() + DEVICES_ENDPOINT + "/" + deviceId, HttpMethod.DELETE, authenticationEntity, Void.class);
+        restTemplate.exchange(apiUrl + DEVICES_ENDPOINT + "/" + deviceId, HttpMethod.DELETE, authenticationEntity, Void.class);
     }
 
     private String getPagedDevicesUrl(int offset, String groupName) {
-        return String.format(devicesPagedUrlTemplate, offset * loProperties.getPageSize(), groupName);
+        return String.format(devicesPagedUrlTemplate, offset * pageSize, groupName);
     }
 
     private String getPagedGroupsUrl(int offset) {
-        return String.format(groupsPagedUrlTemplate, offset * loProperties.getPageSize());
+        return String.format(groupsPagedUrlTemplate, offset * pageSize);
     }
 
     private static int getTotalCount(ResponseEntity<?> response) {

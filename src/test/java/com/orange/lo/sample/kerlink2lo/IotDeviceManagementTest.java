@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RunWith(MockitoJUnitRunner.class)
 public class IotDeviceManagementTest {
@@ -49,6 +50,7 @@ public class IotDeviceManagementTest {
     private ExternalConnectorService externalConnectorService;
 
     private LoDeviceCache loDeviceCache;
+    @Autowired
     private LoProperties loProperties;
     private IotDeviceManagement iotDeviceManagement;
     private Map<String, KerlinkApi> kerlinkApiMap;
@@ -57,8 +59,7 @@ public class IotDeviceManagementTest {
     @Before
     public void setUp() {
         loDeviceCache = new LoDeviceCache();
-        loProperties = new LoProperties();
-        kerlinkApiMap = new HashMap<String, KerlinkApi>();
+        kerlinkApiMap = new HashMap<>();
         kerlinkApiMap.put(KER_ACCOUNT, kerlinkApi);
 
         KerlinkProperties kerlinkProperties = new KerlinkProperties();
@@ -71,7 +72,6 @@ public class IotDeviceManagementTest {
     @Test
     public void shouldDoNothingWhenDevicesAreEqual() throws InterruptedException {
         // given
-        loProperties.setDevicePrefix(LO_DEVICE_PREFIX);
         List<EndDeviceDto> kerlinkDevicesList = getKerlinkDevicesList(3);
         List<LoDevice> loDevicesList = getLoDevicecsList(3);
 
@@ -89,10 +89,6 @@ public class IotDeviceManagementTest {
 
     @Test
     public void shouldCreateNewDevices() throws InterruptedException {
-        // given
-        loProperties.setDevicePrefix(LO_DEVICE_PREFIX);
-        loProperties.setSynchronizationThreadPoolSize(10);
-
         List<EndDeviceDto> kerlinkDevicesList = getKerlinkDevicesList(6);
         List<LoDevice> loDevicesList = getLoDevicecsList(4);
 
@@ -117,10 +113,6 @@ public class IotDeviceManagementTest {
 
     @Test
     public void shouldDeleteOldDevices() throws InterruptedException {
-        // given
-        loProperties.setDevicePrefix(LO_DEVICE_PREFIX);
-        loProperties.setSynchronizationThreadPoolSize(10);
-
         List<EndDeviceDto> kerlinkDevicesList = getKerlinkDevicesList(5);
         List<LoDevice> loDevicesList = getLoDevicecsList(8);
 

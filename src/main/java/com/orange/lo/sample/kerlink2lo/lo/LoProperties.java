@@ -1,125 +1,75 @@
-/** 
-* Copyright (c) Orange. All Rights Reserved.
-* 
-* This source code is licensed under the MIT license found in the 
-* LICENSE file in the root directory of this source tree. 
-*/
-
 package com.orange.lo.sample.kerlink2lo.lo;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.boot.context.properties.ConstructorBinding;
 
-@Component
 @ConfigurationProperties(prefix = "lo")
+@ConstructorBinding
 public class LoProperties {
 
-    private String apiKey;
-    private String apiUrl;
-    private int pageSize;
-    private int synchronizationThreadPoolSize;
-    private int messageSenderMaxThreadPoolSize;
-    private int messageSenderMinThreadPoolSize;
-    private int messageQos;
-    private String connectorApiKey;
-    private String connectorUser;
-    private String connectorMqttUrl;
-    private String devicePrefix;
-    private String messageDecoder;
-    
+    private final String hostname;
+    private final String apiKey;
+    private final String topic;
+    private final Integer messageQos;
+    private final String mqttPersistenceDir;
+    private final Integer keepAliveIntervalSeconds;
+    private final Integer connectionTimeout;
+    private final Boolean automaticReconnect;
+    private final String messageDecoder;
+
+    public LoProperties(
+            String hostname,
+            String apiKey,
+            String topic,
+            Integer messageQos,
+            String mqttPersistenceDir,
+            Integer keepAliveIntervalSeconds,
+            Integer connectionTimeout,
+            Boolean automaticReconnect, String messageDecoder) {
+        this.hostname = hostname;
+        this.apiKey = apiKey;
+        this.topic = topic;
+        this.messageQos = messageQos;
+        this.mqttPersistenceDir = mqttPersistenceDir;
+        this.keepAliveIntervalSeconds = keepAliveIntervalSeconds;
+        this.connectionTimeout = connectionTimeout;
+        this.automaticReconnect = automaticReconnect;
+        this.messageDecoder = messageDecoder;
+    }
+
+    public String getHostname() {
+        return hostname;
+    }
+
     public String getApiKey() {
         return apiKey;
     }
 
-    public void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
+    public String getTopic() {
+        return topic;
     }
 
-    public int getPageSize() {
-        return pageSize;
-    }
-
-    public void setPageSize(int pageSize) {
-        this.pageSize = pageSize;
-    }
-
-    public int getSynchronizationThreadPoolSize() {
-        return synchronizationThreadPoolSize;
-    }
-
-    public void setSynchronizationThreadPoolSize(int synchronizationThreadPoolSize) {
-        this.synchronizationThreadPoolSize = synchronizationThreadPoolSize;
-    }
-
-    public int getMessageSenderMaxThreadPoolSize() {
-        return messageSenderMaxThreadPoolSize;
-    }
-
-    public void setMessageSenderMaxThreadPoolSize(int messageSenderMaxThreadPoolSize) {
-        this.messageSenderMaxThreadPoolSize = messageSenderMaxThreadPoolSize;
-    }
-
-    public int getMessageSenderMinThreadPoolSize() {
-        return messageSenderMinThreadPoolSize;
-    }
-
-    public void setMessageSenderMinThreadPoolSize(int messageSenderMinThreadPoolSize) {
-        this.messageSenderMinThreadPoolSize = messageSenderMinThreadPoolSize;
-    }
-
-    public int getMessageQos() {
+    public Integer getMessageQos() {
         return messageQos;
     }
 
-    public void setMessageQos(int messageQos) {
-        this.messageQos = messageQos;
+    public String getMqttPersistenceDir() {
+        return mqttPersistenceDir;
     }
 
-    public String getConnectorApiKey() {
-        return connectorApiKey;
+    public Integer getKeepAliveIntervalSeconds() {
+        return keepAliveIntervalSeconds;
     }
 
-    public void setConnectorApiKey(String connectorApiKey) {
-        this.connectorApiKey = connectorApiKey;
+    public Integer getConnectionTimeout() {
+        return connectionTimeout;
     }
 
-    public String getConnectorUser() {
-        return connectorUser;
-    }
-
-    public void setConnectorUser(String connectorUser) {
-        this.connectorUser = connectorUser;
-    }
-
-    public String getConnectorMqttUrl() {
-        return connectorMqttUrl;
-    }
-
-    public void setConnectorMqttUrl(String connectorMqttUrl) {
-        this.connectorMqttUrl = connectorMqttUrl;
-    }
-
-    public String getDevicePrefix() {
-        return devicePrefix;
-    }
-
-    public void setDevicePrefix(String devicePrefix) {
-        this.devicePrefix = devicePrefix;
+    public Boolean getAutomaticReconnect() {
+        return automaticReconnect;
     }
 
     public String getMessageDecoder() {
         return messageDecoder;
-    }
-
-    public void setMessageDecoder(String messageDecoder) {
-        this.messageDecoder = messageDecoder;
-    }
-
-    public String getApiUrl() {
-        return apiUrl;
-    }
-
-    public void setApiUrl(String apiUrl) {
-        this.apiUrl = apiUrl;
     }
 }

@@ -9,7 +9,6 @@ package com.orange.lo.sample.kerlink2lo.lo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.orange.lo.sample.kerlink2lo.lo.CommandMapper.LoCommand;
 import com.orange.lo.sample.kerlink2lo.exceptions.EncodingTypeException;
 import com.orange.lo.sample.kerlink2lo.exceptions.LoMqttException;
 import com.orange.lo.sample.kerlink2lo.exceptions.ParseException;
@@ -18,20 +17,14 @@ import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.EndDeviceDto;
+import com.orange.lo.sample.kerlink2lo.lo.CommandMapper.LoCommand;
 import com.orange.lo.sample.kerlink2lo.lo.model.CommandRequest;
 import com.orange.lo.sample.kerlink2lo.lo.model.CommandResponse;
-import com.orange.lo.sample.kerlink2lo.lo.model.DataMessage;
-import com.orange.lo.sample.kerlink2lo.lo.model.Metadata;
 import com.orange.lo.sample.kerlink2lo.lo.model.NodeStatus;
 import com.orange.lo.sample.kerlink2lo.lo.model.NodeStatus.Capabilities;
-
-import java.lang.invoke.MethodHandles;
-import java.util.Base64;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.annotation.PostConstruct;
-
+import com.orange.lo.sdk.LOApiClient;
+import com.orange.lo.sdk.externalconnector.model.DataMessage;
+import com.orange.lo.sdk.externalconnector.model.Metadata;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.text.StringEscapeUtils;
@@ -42,6 +35,12 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import java.lang.invoke.MethodHandles;
+import java.util.Base64;
+import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class ExternalConnector {
@@ -62,14 +61,16 @@ public class ExternalConnector {
     private Map<String, KerlinkApi> kerlinkApiMap;
     private CommandMapper commandMapper;
     private LoDeviceCache deviceCache;
+    private LOApiClient loApiClient;
 
-    public ExternalConnector(IMqttClient loMqttClient, Map<String, KerlinkApi> kerlinkApiMap, ObjectMapper objectMapper, CommandMapper commandMapper, LoProperties loProperties, LoDeviceCache deviceCache) {
+    public ExternalConnector(IMqttClient loMqttClient, Map<String, KerlinkApi> kerlinkApiMap, ObjectMapper objectMapper, CommandMapper commandMapper, LoProperties loProperties, LoDeviceCache deviceCache, LOApiClient loApiClient) {
         this.loMqttClient = loMqttClient;
         this.kerlinkApiMap = kerlinkApiMap;
         this.objectMapper = objectMapper;
         this.commandMapper = commandMapper;
         this.loProperties = loProperties;
         this.deviceCache = deviceCache;
+        this.loApiClient = loApiClient;
     }
 
     @PostConstruct
@@ -95,7 +96,7 @@ public class ExternalConnector {
             dataMessage.setMetadata(new Metadata(messageDecoder));
         }
 
-        MqttMessage msg = prepareMqttMessgae(dataMessage);
+        MqttMessage msg = prepareMqttMessage(dataMessage);
         String topic = String.format(DATA_TOPIC_TEMPLATE, dataUpDto.getEndDevice().getDevEui());
 
         publish(topic, msg);
@@ -110,7 +111,7 @@ public class ExternalConnector {
         nodeStatus.setStatus("ONLINE");
         nodeStatus.setCapabilities(new Capabilities(true));
 
-        MqttMessage msg = prepareMqttMessgae(nodeStatus);
+        MqttMessage msg = prepareMqttMessage(nodeStatus);
         String topic = String.format(STATUS_TOPIC_TEMPLATE, devEui);
 
         publish(topic, msg);
@@ -123,7 +124,7 @@ public class ExternalConnector {
             LOG.debug("Sending command response for device {}", loCommand.get().getNodeId());
             CommandResponse commandResponse = new CommandResponse(loCommand.get().getId(), loCommand.get().getNodeId());
 
-            MqttMessage msg = prepareMqttMessgae(commandResponse);
+            MqttMessage msg = prepareMqttMessage(commandResponse);
             publish(COMMAND_RESPONSE_TOPIC, msg);
         } else {
             if (LOG.isDebugEnabled()) {
@@ -133,7 +134,7 @@ public class ExternalConnector {
         }
     }
 
-    private MqttMessage prepareMqttMessgae(Object dataMessage) {
+    private MqttMessage prepareMqttMessage(Object dataMessage) {
         try {
             String payload = objectMapper.writeValueAsString(dataMessage);
             MqttMessage msg = new MqttMessage();

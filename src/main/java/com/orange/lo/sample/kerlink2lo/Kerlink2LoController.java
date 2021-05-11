@@ -69,10 +69,8 @@ public class Kerlink2LoController {
         return () -> {
             if ("OK".equals(dataDownEventDto.getStatus())) {
                 externalConnectorService.sendCommandResponse(dataDownEventDto);
-                return ResponseEntity.ok().build();
-            } else {
-                return ResponseEntity.ok().build();
             }
+            return ResponseEntity.ok().build();
         };
     }
 

@@ -3,24 +3,16 @@ server:
 spring:
   application:
     name: Kerlink2Lo
-    
+
 lo:
+  hostname: liveobjects.orange-business.com
   api-key: _api_key_
-  api-url: https://liveobjects.orange-business.com/api/
-  connector-api-key: _connector_api_key_
-  connector-user: connector
-  connector-mqtt-url: ssl://liveobjects.orange-business.com:8883
-  
-  synchronization-device-interval: 10000
-  synchronization-thread-pool-size: 40
-  
-  page-size: 20
-  device-prefix: 'urn:lo:nsid:x-connector:'
-  
-  message-sender-max-thread-pool-size: 100
-  message-sender-min-thread-pool-size: 10
+  topic:
+  keep-alive-interval-seconds: 30
+  automatic-reconnect: true
   message-qos: 1
-  message-decoder: test_csv
+  mqtt-persistence-dir: ${basedir:.}/temp/
+  connection-timeout: 30000
   
 kerlink-list:
   -

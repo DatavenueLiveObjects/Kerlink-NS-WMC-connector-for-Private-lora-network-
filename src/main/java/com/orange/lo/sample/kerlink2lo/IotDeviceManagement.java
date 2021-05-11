@@ -45,6 +45,8 @@ public class IotDeviceManagement {
     private LoDeviceProvider loDeviceProvider;
     private ExternalConnectorService externalConnectorService;
     private LoDeviceCache deviceCache;
+    private static final int synchronizationThreadPoolSize = 10;
+    private static final String devicePrefix = "urn:lo:nsid:x-connector:";
 
     public IotDeviceManagement(Map<String, KerlinkApi> kerlinkApiMap, LoDeviceProvider loDeviceProvider, ExternalConnectorService externalConnectorService, LoProperties loProperties, KerlinkPropertiesList kerlinkPropertiesList, LoDeviceCache deviceCache) {
         this.kerlinkApiMap = kerlinkApiMap;
@@ -74,7 +76,7 @@ public class IotDeviceManagement {
                         .map(loDevice -> StringEscapeUtils.escapeJava(loDevice.getId()))
                         .collect(Collectors.toSet());
                 LOG.debug("Got {} devices from LO", loIds.size());
-                Set<String> loIdsWithoutPrefix = loIds.stream().map(loId -> loId.substring(loProperties.getDevicePrefix().length())).collect(Collectors.toSet());
+                Set<String> loIdsWithoutPrefix = loIds.stream().map(loId -> loId.substring(devicePrefix.length())).collect(Collectors.toSet());
                 deviceCache.addAll(loIdsWithoutPrefix, kerlinkAccountName);
 
                 // add devices to LO
@@ -84,11 +86,11 @@ public class IotDeviceManagement {
 
                 // remove devices from LO
                 Set<String> devicesToRemoveFromLo = new HashSet<>(loIds);
-                devicesToRemoveFromLo.removeAll(kerlinkIds.stream().map(kerlinkId -> loProperties.getDevicePrefix() + kerlinkId).collect(Collectors.toSet()));
+                devicesToRemoveFromLo.removeAll(kerlinkIds.stream().map(kerlinkId -> devicePrefix + kerlinkId).collect(Collectors.toSet()));
                 LOG.debug("Devices to remove from LO: {}", devicesToRemoveFromLo);
 
                 if (devicesToAddToLo.size() + devicesToRemoveFromLo.size() > 0) {
-                    ThreadPoolExecutor synchronizingExecutor = new ThreadPoolExecutor(loProperties.getSynchronizationThreadPoolSize(), loProperties.getSynchronizationThreadPoolSize(), 10, TimeUnit.SECONDS, new ArrayBlockingQueue<>(devicesToAddToLo.size() + devicesToRemoveFromLo.size()));
+                    ThreadPoolExecutor synchronizingExecutor = new ThreadPoolExecutor(synchronizationThreadPoolSize, synchronizationThreadPoolSize, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<>(devicesToAddToLo.size() + devicesToRemoveFromLo.size()));
 
                     for (String deviceId : devicesToAddToLo) {
                         synchronizingExecutor.execute(() -> {
