@@ -103,6 +103,7 @@ public class KerlinkApi {
         HttpEntity<DataDownDto> dataDownDtoHttpEntity = prepareHttpEntity(token, dataDownDto);
         ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, dataDownDtoHttpEntity, Void.class);
         URI location = response.getHeaders().getLocation();
+        // TODO: What is that magic 22?
         String commandId =  location != null ? location.getPath().substring(22) : null;
         return Optional.ofNullable(commandId);
     }

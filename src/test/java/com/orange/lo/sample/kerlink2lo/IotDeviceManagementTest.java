@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.orange.lo.sdk.rest.model.Device;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,7 +74,7 @@ public class IotDeviceManagementTest {
     public void shouldDoNothingWhenDevicesAreEqual() throws InterruptedException {
         // given
         List<EndDeviceDto> kerlinkDevicesList = getKerlinkDevicesList(3);
-        List<LoDevice> loDevicesList = getLoDevicecsList(3);
+        List<Device> loDevicesList = getLoDevicesList(3);
 
         when(kerlinkApi.getEndDevices()).thenReturn(kerlinkDevicesList);
         when(loDeviceProvider.getDevices(GROUP_NAME)).thenReturn(loDevicesList);
@@ -90,7 +91,7 @@ public class IotDeviceManagementTest {
     @Test
     public void shouldCreateNewDevices() throws InterruptedException {
         List<EndDeviceDto> kerlinkDevicesList = getKerlinkDevicesList(6);
-        List<LoDevice> loDevicesList = getLoDevicecsList(4);
+        List<Device> loDevicesList = getLoDevicesList(4);
 
         when(kerlinkApi.getEndDevices()).thenReturn(kerlinkDevicesList);
         when(loDeviceProvider.getDevices(GROUP_NAME)).thenReturn(loDevicesList);
@@ -114,7 +115,7 @@ public class IotDeviceManagementTest {
     @Test
     public void shouldDeleteOldDevices() throws InterruptedException {
         List<EndDeviceDto> kerlinkDevicesList = getKerlinkDevicesList(5);
-        List<LoDevice> loDevicesList = getLoDevicecsList(8);
+        List<Device> loDevicesList = getLoDevicesList(8);
 
         when(kerlinkApi.getEndDevices()).thenReturn(kerlinkDevicesList);
         when(loDeviceProvider.getDevices(GROUP_NAME)).thenReturn(loDevicesList);
@@ -135,11 +136,9 @@ public class IotDeviceManagementTest {
         verify(externalConnectorService, times(3)).deleteDevice(any());
     }
 
-    private List<LoDevice> getLoDevicecsList(int amount) {
+    private List<Device> getLoDevicesList(int amount) {
         return IntStream.rangeClosed(1, amount).mapToObj(i -> {
-            LoDevice loDevice = new LoDevice();
-            loDevice.setId(LO_DEVICE_PREFIX + i);
-            return loDevice;
+            return new Device().withId(LO_DEVICE_PREFIX + i);
         }).collect(Collectors.toList());
     }
 

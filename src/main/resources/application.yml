@@ -13,6 +13,8 @@ lo:
   message-qos: 1
   mqtt-persistence-dir: ${basedir:.}/temp/
   connection-timeout: 30000
+  page-size: 20
+  ext-connector-command-request-topic:
   
 kerlink-list:
   -

@@ -16,6 +16,7 @@ public class LoProperties {
     private final Integer connectionTimeout;
     private final Boolean automaticReconnect;
     private final String messageDecoder;
+    private Integer pageSize;
 
     public LoProperties(
             String hostname,
@@ -71,5 +72,9 @@ public class LoProperties {
 
     public String getMessageDecoder() {
         return messageDecoder;
+    }
+
+    public Integer getPageSize() {
+        return pageSize;
     }
 }

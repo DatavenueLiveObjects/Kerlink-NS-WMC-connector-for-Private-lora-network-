@@ -9,24 +9,16 @@ package com.orange.lo.sample.kerlink2lo.lo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.orange.lo.sample.kerlink2lo.exceptions.EncodingTypeException;
 import com.orange.lo.sample.kerlink2lo.exceptions.LoMqttException;
 import com.orange.lo.sample.kerlink2lo.exceptions.ParseException;
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkApi;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.EndDeviceDto;
 import com.orange.lo.sample.kerlink2lo.lo.CommandMapper.LoCommand;
 import com.orange.lo.sample.kerlink2lo.lo.model.CommandRequest;
 import com.orange.lo.sample.kerlink2lo.lo.model.CommandResponse;
-import com.orange.lo.sample.kerlink2lo.lo.model.NodeStatus;
-import com.orange.lo.sample.kerlink2lo.lo.model.NodeStatus.Capabilities;
 import com.orange.lo.sdk.LOApiClient;
-import com.orange.lo.sdk.externalconnector.model.DataMessage;
-import com.orange.lo.sdk.externalconnector.model.Metadata;
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
@@ -38,83 +30,26 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.lang.invoke.MethodHandles;
-import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 
 @Component
 public class ExternalConnector {
 
-    private static final String DATA_TOPIC_TEMPLATE = "connector/v1/nodes/%s/data";
-    private static final String STATUS_TOPIC_TEMPLATE = "connector/v1/nodes/%s/status";
     private static final String COMMAND_RESPONSE_TOPIC = "connector/v1/responses/command";
-    private static final String COMMAND_REQUEST_TOPIC = "connector/v1/requests/command";
-
-    private static final String F_PORT_KEY = "fPort";
-    private static final String F_PORT_DEFAULT = "1";
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private IMqttClient loMqttClient;
     private ObjectMapper objectMapper;
     private LoProperties loProperties;
-    private Map<String, KerlinkApi> kerlinkApiMap;
     private CommandMapper commandMapper;
-    private LoDeviceCache deviceCache;
-    private LOApiClient loApiClient;
 
-    public ExternalConnector(IMqttClient loMqttClient, Map<String, KerlinkApi> kerlinkApiMap, ObjectMapper objectMapper, CommandMapper commandMapper, LoProperties loProperties, LoDeviceCache deviceCache, LOApiClient loApiClient) {
+    public ExternalConnector(IMqttClient loMqttClient, ObjectMapper objectMapper, CommandMapper commandMapper, LoProperties loProperties) {
         this.loMqttClient = loMqttClient;
-        this.kerlinkApiMap = kerlinkApiMap;
         this.objectMapper = objectMapper;
         this.commandMapper = commandMapper;
         this.loProperties = loProperties;
-        this.deviceCache = deviceCache;
-        this.loApiClient = loApiClient;
-    }
-
-    @PostConstruct
-    public void receiveCommands() {
-        try {
-            LOG.info("Run commands subscriber");
-            loMqttClient.subscribe(COMMAND_REQUEST_TOPIC, loProperties.getMessageQos(), new MessageListener());
-        } catch (MqttException e) {
-            throw new LoMqttException(e);
-        }
-    }
-
-    public void sendMessage(DataUpDto dataUpDto) {
-        LOG.debug("Sending data message from device {}", dataUpDto.getEndDevice().getDevEui());
-
-        DataMessage dataMessage = new DataMessage();
-        convertPayload(dataUpDto);
-
-        dataMessage.setValue(dataUpDto);
-
-        String messageDecoder = loProperties.getMessageDecoder();
-        if (messageDecoder != null && !messageDecoder.isEmpty()) {
-            dataMessage.setMetadata(new Metadata(messageDecoder));
-        }
-
-        MqttMessage msg = prepareMqttMessage(dataMessage);
-        String topic = String.format(DATA_TOPIC_TEMPLATE, dataUpDto.getEndDevice().getDevEui());
-
-        publish(topic, msg);
-    }
-
-    public void sendStatus(String devEui) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Sending status message for device {}", StringEscapeUtils.escapeHtml4(devEui));
-        }
-
-        NodeStatus nodeStatus = new NodeStatus();
-        nodeStatus.setStatus("ONLINE");
-        nodeStatus.setCapabilities(new Capabilities(true));
-
-        MqttMessage msg = prepareMqttMessage(nodeStatus);
-        String topic = String.format(STATUS_TOPIC_TEMPLATE, devEui);
-
-        publish(topic, msg);
     }
 
     public void sendCommandResponse(DataDownEventDto dataDownEventDto) {
@@ -129,7 +64,7 @@ public class ExternalConnector {
         } else {
             if (LOG.isDebugEnabled()) {
                 String cleanDtoString = StringEscapeUtils.escapeJava(dataDownEventDto.toString());
-                LOG.debug("Receive unknow command status from Kerlink: {}", cleanDtoString);
+                LOG.debug("Receive unknown command status from Kerlink: {}", cleanDtoString);
             }
         }
     }
@@ -154,58 +89,4 @@ public class ExternalConnector {
         }
     }
 
-    private void convertPayload(DataUpDto dataUpDto) {
-        switch (dataUpDto.getEncodingType()) {
-        case "BASE64":
-            byte[] payload = Base64.getDecoder().decode(dataUpDto.getPayload());
-            dataUpDto.setPayload(new String(payload));
-            break;
-        case "HEXA":
-            try {
-                byte[] decodeHex = Hex.decodeHex(dataUpDto.getPayload());
-                dataUpDto.setPayload(new String(decodeHex));
-            } catch (DecoderException e) {
-                throw new EncodingTypeException(e);
-            }
-            break;
-        default:
-            break;
-        }
-    }
-
-    protected class MessageListener implements IMqttMessageListener {
-
-        private static final String CONTENT_TYPE_TEXT = "TEXT";
-
-        @Override
-        public void messageArrived(String topic, MqttMessage message) throws Exception {
-            LOG.trace("New Command received - topic: {}, command: {}", topic, message);
-
-            CommandRequest commandRequest = objectMapper.readValue(message.getPayload(), CommandRequest.class);
-
-            DataDownDto dataDownDto = prepareDataDown(commandRequest);
-
-            Optional<String> commandId = kerlinkApiMap.get(deviceCache.getGroup(dataDownDto.getEndDevice().getDevEui())).sendCommand(dataDownDto);
-            if (commandId.isPresent()) {
-                commandMapper.put(commandId.get(), commandRequest.getId(), commandRequest.getNodeId());
-                LOG.trace("Put to commandMapper: kerlinkID = {}, loId = {}, nodeId = {}", commandId, commandRequest.getId(), commandRequest.getNodeId());
-            }
-        }
-
-        private DataDownDto prepareDataDown(CommandRequest commandRequest) {
-            DataDownDto dataDownDto = new DataDownDto();
-            dataDownDto.setConfirmed(false);
-            dataDownDto.setContentType(CONTENT_TYPE_TEXT);
-
-            String fPort = commandRequest.getValue().getArg().getOrDefault(F_PORT_KEY, F_PORT_DEFAULT);
-            dataDownDto.setfPort(Integer.parseInt(fPort));
-
-            EndDeviceDto endDeviceDto = new EndDeviceDto();
-            endDeviceDto.setDevEui(commandRequest.getNodeId());
-
-            dataDownDto.setEndDevice(endDeviceDto);
-            dataDownDto.setPayload(commandRequest.getValue().getReq());
-            return dataDownDto;
-        }
-    }
 }

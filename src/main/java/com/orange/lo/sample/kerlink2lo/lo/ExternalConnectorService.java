@@ -17,7 +17,6 @@ import com.orange.lo.sdk.externalconnector.model.Metadata;
 import com.orange.lo.sdk.externalconnector.model.NodeStatus;
 import com.orange.lo.sdk.externalconnector.model.NodeStatus.Capabilities;
 import com.orange.lo.sdk.externalconnector.model.Status;
-import com.orange.lo.sdk.rest.devicemanagement.Inventory;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.stereotype.Service;
@@ -31,12 +30,14 @@ public class ExternalConnectorService {
     private LoDeviceCache deviceCache;
     private LoProperties loProperties;
     private LOApiClient loApiClient;
-    
-    public ExternalConnectorService(ExternalConnector externalConnector, LoDeviceProvider loDeviceProvider, LoDeviceCache deviceCache, LoProperties loProperties, LOApiClient loApiClient) {
+    private LoDeviceProvider loDeviceProvider;
+
+    public ExternalConnectorService(ExternalConnector externalConnector, LoDeviceCache deviceCache, LoProperties loProperties, LOApiClient loApiClient, LoDeviceProvider loDeviceProvider) {
         this.externalConnector = externalConnector;
         this.deviceCache = deviceCache;
         this.loProperties = loProperties;
         this.loApiClient = loApiClient;
+        this.loDeviceProvider = loDeviceProvider;
     }
     
     public void sendMessage(DataUpDto dataUpDto, String kerlinkAccountName) {
@@ -53,7 +54,6 @@ public class ExternalConnectorService {
             dataMessage.setMetadata(new Metadata(messageDecoder));
         }
         loApiClient.getDataManagementExtConnector().sendMessage(deviceId, dataMessage);
-        // externalConnector.sendMessage(dataUpDto);
     }
     
     public void sendCommandResponse(DataDownEventDto dataDownEventDto) {
@@ -61,24 +61,14 @@ public class ExternalConnectorService {
     }
     
     public void createDevice(String kerlinkDeviceId, String kerlinkAccountName) {
-        loApiClient.getDeviceManagement().getInventory().createDevice(kerlinkDeviceId);
-        NodeStatus nodeStatus = new NodeStatus();
-        nodeStatus.setStatus(Status.ONLINE);
-        nodeStatus.setCapabilities(new Capabilities(true));
-        loApiClient.getDataManagementExtConnector().sendStatus(kerlinkDeviceId, nodeStatus);
-
-        //loDeviceProvider.addDevice(kerlinkDeviceId, kerlinkAccountName);
-        //externalConnector.sendStatus(kerlinkDeviceId);
+        // TODO: Is status send needed or sent in SDK?
+        loDeviceProvider.addDevice(kerlinkDeviceId, kerlinkAccountName);
 
         deviceCache.add(kerlinkDeviceId, kerlinkAccountName);        
     }
     
     public void deleteDevice(String loDeviceId) {
-        loApiClient.getDeviceManagement().getInventory().deleteDevice(loDeviceId);
-
-        //loDeviceProvider.deleteDevice(loDeviceId);
-        //String kerlinkDeviceId = loDeviceId.substring(loProperties.getDevicePrefix().length());
-        //deviceCache.delete(kerlinkDeviceId);
+        loDeviceProvider.deleteDevice(loDeviceId);
         deviceCache.delete(loDeviceId);
     }
 
