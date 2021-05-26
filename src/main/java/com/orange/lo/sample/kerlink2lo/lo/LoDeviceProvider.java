@@ -120,10 +120,10 @@ public class LoDeviceProvider {
         }
 
         Group s = loGroupsMap.get(kerlinkAccountName);
-        Command command = new Command()
+        InterfaceCapability interfaceCapability = new InterfaceCapability()
                 .withAvailable(true);
         Capabilities capabilities = new Capabilities()
-                .withCommand(command);
+                .withCommand(interfaceCapability);
         Interface anInterface = new Interface()
                 .withCapabilities(capabilities);
         Device device = new Device()

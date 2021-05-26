@@ -10,13 +10,9 @@ package com.orange.lo.sample.kerlink2lo.lo;
 import com.orange.lo.sample.kerlink2lo.exceptions.EncodingTypeException;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
-
 import com.orange.lo.sdk.LOApiClient;
 import com.orange.lo.sdk.externalconnector.model.DataMessage;
 import com.orange.lo.sdk.externalconnector.model.Metadata;
-import com.orange.lo.sdk.externalconnector.model.NodeStatus;
-import com.orange.lo.sdk.externalconnector.model.NodeStatus.Capabilities;
-import com.orange.lo.sdk.externalconnector.model.Status;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.stereotype.Service;

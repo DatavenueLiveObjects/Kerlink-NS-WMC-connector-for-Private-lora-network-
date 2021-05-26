@@ -7,13 +7,19 @@
 
 package com.orange.lo.sample.kerlink2lo;
 
-import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkApi;
-import com.orange.lo.sample.kerlink2lo.kerlink.model.EndDeviceDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
 import com.orange.lo.sample.kerlink2lo.lo.ExternalConnectorService;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceCache;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceProvider;
 import com.orange.lo.sample.kerlink2lo.lo.LoProperties;
+import org.apache.commons.text.StringEscapeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
@@ -23,15 +29,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import com.orange.lo.sample.kerlink2lo.lo.model.LoDevice;
-import org.apache.commons.text.StringEscapeUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
 
 @EnableScheduling
 @Component
