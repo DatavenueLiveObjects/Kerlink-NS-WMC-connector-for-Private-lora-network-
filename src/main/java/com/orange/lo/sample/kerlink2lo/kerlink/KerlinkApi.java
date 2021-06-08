@@ -39,10 +39,10 @@ public class KerlinkApi {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String NEXT = "next";
-    private RestTemplate restTemplate;
-    private KerlinkProperties kerlinkProperties;
+    private final RestTemplate restTemplate;
+    private final KerlinkProperties kerlinkProperties;
     private HttpEntity<Void> httpEntity;
-    private String firstHref;
+    private final String firstHref;
     private String token;
 
     public KerlinkApi(KerlinkProperties kerlinkProperties, @Qualifier("kerlinkRestTemplate") RestTemplate restTemplate) {

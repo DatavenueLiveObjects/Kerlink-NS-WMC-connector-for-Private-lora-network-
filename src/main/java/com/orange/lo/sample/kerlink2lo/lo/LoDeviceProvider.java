@@ -39,10 +39,12 @@ public class LoDeviceProvider {
     private final Policy<List<Device>> deviceRetryPolicy;
     private final Policy<Group> groupRetryPolicy;
     private final DeviceManagement deviceManagement;
+    private final LoDeviceCache deviceCache;
 
-    public LoDeviceProvider(LoProperties loProperties, KerlinkPropertiesList kerlinkPropertiesList, LOApiClient loApiClient) {
+    public LoDeviceProvider(LoProperties loProperties, KerlinkPropertiesList kerlinkPropertiesList, DeviceManagement deviceManagement, LoDeviceCache deviceCache) {
         this.kerlinkPropertiesList = kerlinkPropertiesList;
-        deviceManagement = loApiClient.getDeviceManagement();
+        this.deviceManagement = deviceManagement;
+        this.deviceCache = deviceCache;
 
         this.loGroupsMap = new HashMap<>();
         pageSize = loProperties.getPageSize();
@@ -136,6 +138,7 @@ public class LoDeviceProvider {
                                 .getInventory()
                                 .createDevice(device)
                 );
+        deviceCache.add(kerlinkAccountName, deviceId);
     }
 
     public void deleteDevice(String deviceId) {
@@ -144,10 +147,11 @@ public class LoDeviceProvider {
         }
         Failsafe.with(deviceRetryPolicy)
                 .run(() ->
-        deviceManagement
-                .getInventory()
-                .deleteDevice(deviceId)
+                        deviceManagement
+                                .getInventory()
+                                .deleteDevice(deviceId)
                 );
+        deviceCache.delete(deviceId);
     }
 
 }

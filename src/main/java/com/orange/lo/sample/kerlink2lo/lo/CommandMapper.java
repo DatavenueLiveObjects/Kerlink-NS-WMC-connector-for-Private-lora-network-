@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class CommandMapper {
 
-    private static Map<String, LoCommand> map = new ConcurrentHashMap<>();
+    private static final Map<String, LoCommand> map = new ConcurrentHashMap<>();
     
     public void put(String kerlinkId, String loId, String nodeId) {
         map.put(kerlinkId, new LoCommand(loId, nodeId));
@@ -20,8 +20,8 @@ public class CommandMapper {
     }
     
     public class LoCommand {
-        private String id;
-        private String nodeId;
+        private final String id;
+        private final String nodeId;
         
         public LoCommand(String id, String nodeId) {
             this.id = id;

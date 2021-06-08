@@ -9,7 +9,7 @@ package com.orange.lo.sample.kerlink2lo.lo;
 
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
 import com.orange.lo.sample.kerlink2lo.lo.CommandMapper.LoCommand;
-import com.orange.lo.sdk.LOApiClient;
+import com.orange.lo.sdk.externalconnector.DataManagementExtConnector;
 import com.orange.lo.sdk.externalconnector.model.CommandResponse;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
@@ -20,16 +20,16 @@ import java.lang.invoke.MethodHandles;
 import java.util.Optional;
 
 @Component
-public class ExternalConnector {
+public class ExternalConnectorCommandResponseWrapper {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private CommandMapper commandMapper;
-    private LOApiClient loApiClient;
+    private final CommandMapper commandMapper;
+    private final DataManagementExtConnector dataManagementExtConnector;
 
-    public ExternalConnector(CommandMapper commandMapper, LOApiClient loApiClient) {
+    public ExternalConnectorCommandResponseWrapper(CommandMapper commandMapper, DataManagementExtConnector dataManagementExtConnector) {
         this.commandMapper = commandMapper;
-        this.loApiClient = loApiClient;
+        this.dataManagementExtConnector = dataManagementExtConnector;
     }
 
     public void sendCommandResponse(DataDownEventDto dataDownEventDto) {
@@ -38,7 +38,7 @@ public class ExternalConnector {
         if (loCommand.isPresent()) {
             LOG.debug("Sending command response for device {}", loCommand.get().getNodeId());
             CommandResponse commandResponse = new CommandResponse(loCommand.get().getId(), loCommand.get().getNodeId());
-            loApiClient.getDataManagementExtConnector().sendCommandResponse(commandResponse);
+            dataManagementExtConnector.sendCommandResponse(commandResponse);
         } else {
             if (LOG.isDebugEnabled()) {
                 String cleanDtoString = StringEscapeUtils.escapeJava(dataDownEventDto.toString());

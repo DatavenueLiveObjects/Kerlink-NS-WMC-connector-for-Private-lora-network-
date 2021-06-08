@@ -36,20 +36,18 @@ public class IotDeviceManagement {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private LoProperties loProperties;
-    private KerlinkPropertiesList kerlinkPropertiesList;
-    private Map<String, KerlinkApi> kerlinkApiMap;
-    private LoDeviceProvider loDeviceProvider;
-    private ExternalConnectorService externalConnectorService;
-    private LoDeviceCache deviceCache;
+    private final KerlinkPropertiesList kerlinkPropertiesList;
+    private final Map<String, KerlinkApi> kerlinkApiMap;
+    private final LoDeviceProvider loDeviceProvider;
+    private final ExternalConnectorService externalConnectorService;
+    private final LoDeviceCache deviceCache;
     private static final int synchronizationThreadPoolSize = 10;
     private static final String devicePrefix = "urn:lo:nsid:x-connector:";
 
-    public IotDeviceManagement(Map<String, KerlinkApi> kerlinkApiMap, LoDeviceProvider loDeviceProvider, ExternalConnectorService externalConnectorService, LoProperties loProperties, KerlinkPropertiesList kerlinkPropertiesList, LoDeviceCache deviceCache) {
+    public IotDeviceManagement(Map<String, KerlinkApi> kerlinkApiMap, LoDeviceProvider loDeviceProvider, ExternalConnectorService externalConnectorService, KerlinkPropertiesList kerlinkPropertiesList, LoDeviceCache deviceCache) {
         this.kerlinkApiMap = kerlinkApiMap;
         this.loDeviceProvider = loDeviceProvider;
         this.externalConnectorService = externalConnectorService;
-        this.loProperties = loProperties;
         this.kerlinkPropertiesList = kerlinkPropertiesList;
         this.deviceCache = deviceCache;
     }

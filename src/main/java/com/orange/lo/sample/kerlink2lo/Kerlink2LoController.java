@@ -37,7 +37,7 @@ public class Kerlink2LoController {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String KERLINK_ACCOUNT_HEADER = "Kerlink-Account";
 
-    private ExternalConnectorService externalConnectorService;
+    private final ExternalConnectorService externalConnectorService;
 
     public Kerlink2LoController(ExternalConnectorService externalConnectorService) {
         this.externalConnectorService = externalConnectorService;

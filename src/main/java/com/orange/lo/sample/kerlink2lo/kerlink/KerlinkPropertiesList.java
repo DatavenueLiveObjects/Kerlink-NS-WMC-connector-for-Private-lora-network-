@@ -6,16 +6,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties()
+@ConfigurationProperties(prefix = "kerlink-list")
 public class KerlinkPropertiesList {
 
-    private List<KerlinkProperties> kerlinkList;
+    private final List<KerlinkProperties> kerlinkList;
+
+    public KerlinkPropertiesList(List<KerlinkProperties> kerlinkList) {
+        this.kerlinkList = kerlinkList;
+    }
 
     public List<KerlinkProperties> getKerlinkList() {
         return kerlinkList;
-    }
-
-    public void setKerlinkList(List<KerlinkProperties> kerlinkList) {
-        this.kerlinkList = kerlinkList;
     }
 }

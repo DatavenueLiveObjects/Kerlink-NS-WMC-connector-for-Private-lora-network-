@@ -10,13 +10,13 @@ public class LoProperties {
     private final String hostname;
     private final String apiKey;
     private final String topic;
-    private final Integer messageQos;
     private final String mqttPersistenceDir;
+    private final String messageDecoder;
+    private final Boolean automaticReconnect;
+    private final Integer messageQos;
     private final Integer keepAliveIntervalSeconds;
     private final Integer connectionTimeout;
-    private final Boolean automaticReconnect;
-    private final String messageDecoder;
-    private Integer pageSize;
+    private final Integer pageSize;
 
     public LoProperties(
             String hostname,
@@ -26,7 +26,7 @@ public class LoProperties {
             String mqttPersistenceDir,
             Integer keepAliveIntervalSeconds,
             Integer connectionTimeout,
-            Boolean automaticReconnect, String messageDecoder) {
+            Boolean automaticReconnect, String messageDecoder, Integer pageSize) {
         this.hostname = hostname;
         this.apiKey = apiKey;
         this.topic = topic;
@@ -36,6 +36,7 @@ public class LoProperties {
         this.connectionTimeout = connectionTimeout;
         this.automaticReconnect = automaticReconnect;
         this.messageDecoder = messageDecoder;
+        this.pageSize = pageSize;
     }
 
     public String getHostname() {

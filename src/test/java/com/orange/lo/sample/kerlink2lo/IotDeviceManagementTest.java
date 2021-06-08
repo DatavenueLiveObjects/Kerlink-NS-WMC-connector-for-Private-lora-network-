@@ -60,9 +60,8 @@ public class IotDeviceManagementTest {
 
         KerlinkProperties kerlinkProperties = new KerlinkProperties();
         kerlinkProperties.setKerlinkAccountName(KER_ACCOUNT);
-        kerlinkPropertiesList = new KerlinkPropertiesList();
-        kerlinkPropertiesList.setKerlinkList(Lists.list(kerlinkProperties));
-        iotDeviceManagement = new IotDeviceManagement(kerlinkApiMap, loDeviceProvider, externalConnectorService, loProperties, kerlinkPropertiesList, loDeviceCache);
+        kerlinkPropertiesList = new KerlinkPropertiesList(Lists.list(kerlinkProperties));
+        iotDeviceManagement = new IotDeviceManagement(kerlinkApiMap, loDeviceProvider, externalConnectorService, kerlinkPropertiesList, loDeviceCache);
     }
 
     @Test
