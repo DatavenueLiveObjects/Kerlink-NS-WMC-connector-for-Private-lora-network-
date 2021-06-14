@@ -86,9 +86,96 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5.3</version>
+				<configuration>
+					<scmCommentPrefix>[ci skip]</scmCommentPrefix>
+					<tagNameFormat>v@{project.version}</tagNameFormat>
+					<arguments>-Prelease</arguments>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-jar-plugin</artifactId>
+						<configuration>
+							<finalName>${project.artifactId}-${project.version}</finalName>
+							<excludes>
+								<exclude>application.yml</exclude>
+							</excludes>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>repackage</id>
+								<phase>none</phase>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>appassembler-maven-plugin</artifactId>
+						<version>2.1.0</version>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>assemble</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<configurationDirectory>conf</configurationDirectory>
+							<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+							<assembleDirectory>${project.build.directory}/kerlink2lo-assemble</assembleDirectory>
+							<repositoryName>lib</repositoryName>
+							<repositoryLayout>flat</repositoryLayout>
+							<binFileExtensions>
+								<unix>.sh</unix>
+							</binFileExtensions>
+							<platforms>
+								<platform>windows</platform>
+								<platform>unix</platform>
+							</platforms>
+							<programs>
+								<program>
+									<mainClass>com.orange.lo.sample.kerlink2lo.Kerlink2LoApplication</mainClass>
+									<id>app</id>
+								</program>
+							</programs>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>single</goal>
+								</goals>
+								<configuration>
+									<appendAssemblyId>false</appendAssemblyId>
+									<descriptors>
+										<descriptor>src/main/assembly/assembly.xml</descriptor>
+									</descriptors>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
