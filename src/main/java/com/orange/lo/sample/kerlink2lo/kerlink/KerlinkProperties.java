@@ -13,6 +13,7 @@ public class KerlinkProperties {
     private String login;
     private String password;
     private int pageSize;
+    private int loginInterval;
     private String kerlinkAccountName;
 
     public String getBaseUrl() {
@@ -53,5 +54,13 @@ public class KerlinkProperties {
 
     public void setKerlinkAccountName(String kerlinkAccountName) {
         this.kerlinkAccountName = kerlinkAccountName;
+    }
+
+    public int getLoginInterval() {
+        return loginInterval;
+    }
+
+    public void setLoginInterval(int loginInterval) {
+        this.loginInterval = loginInterval;
     }
 }

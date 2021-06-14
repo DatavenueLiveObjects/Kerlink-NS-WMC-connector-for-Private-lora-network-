@@ -1,0 +1,21 @@
+{
+  "recvTime": 123456789,
+  "fPort": 1,
+  "classB": false,
+  "delayed": false,
+  "fcntUp": 981,
+  "fCntUp": 981,
+  "confirmed": true,
+  "adr": true,
+  "endDevice": {
+    "devAddr": "2601298C",
+    "devEui": "0018B20000002345"
+  },
+  "fCntDown": 5867,
+  "encrypted": false,
+  "payload": "MTU7MjU=",
+  "fport": 1,
+  "encodingType": "BASE64",
+  "id": "5e79be185f9d920bd573e3e7",
+  "fcntDown": 5867
+}

@@ -12,8 +12,13 @@ import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
 import com.orange.lo.sdk.externalconnector.DataManagementExtConnector;
 import com.orange.lo.sdk.externalconnector.model.DataMessage;
 import com.orange.lo.sdk.externalconnector.model.Metadata;
+import com.orange.lo.sdk.externalconnector.model.NodeStatus;
+import com.orange.lo.sdk.externalconnector.model.NodeStatus.Capabilities;
+import com.orange.lo.sdk.externalconnector.model.NodeStatus.Command;
+import com.orange.lo.sdk.externalconnector.model.Status;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.Optional;
 
 @Service
@@ -31,6 +36,11 @@ public class LoApiExternalConnectorService implements ExternalConnectorService {
         this.loApiDataManagementExtConnector = dataManagementExtConnector;
         this.loDeviceProvider = loDeviceProvider;
         this.payloadDecoder = payloadDecoder;
+    }
+
+    @PostConstruct
+    public void connect() {
+        loApiDataManagementExtConnector.connect();
     }
 
     @Override
@@ -57,8 +67,14 @@ public class LoApiExternalConnectorService implements ExternalConnectorService {
 
     @Override
     public void createDevice(String kerlinkDeviceId, String kerlinkAccountName) {
-        // TODO: Is status send needed or sent in SDK?
         loDeviceProvider.addDevice(kerlinkDeviceId, kerlinkAccountName);
+
+        NodeStatus nodeStatus = new NodeStatus();
+        nodeStatus.setStatus(Status.ONLINE);
+        Capabilities capabilities = new Capabilities();
+        capabilities.setCommand(new Command(true));
+        nodeStatus.setCapabilities(capabilities);
+        loApiDataManagementExtConnector.sendStatus(kerlinkDeviceId, nodeStatus);
     }
 
     @Override

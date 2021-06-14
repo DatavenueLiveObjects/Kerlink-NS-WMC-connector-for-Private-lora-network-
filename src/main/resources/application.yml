@@ -14,7 +14,8 @@ lo:
   mqtt-persistence-dir: ${basedir:.}/temp/
   connection-timeout: 30000
   page-size: 20
-  
+  synchronization-device-interval: PT10M
+
 kerlink-list:
   -
     base-url: https://_your_wmc_host_/gms
@@ -23,11 +24,11 @@ kerlink-list:
     login-interval: 32400000
     page-size: 20
     kerlink-account-name: _kerlink_account_name
-    
+
   -
     base-url: https://_your_wmc_host_/gms
     login: _kerlink_login_
     password: _kerlink_password
     login-interval: 32400000
     page-size: 20
-    kerlink-account-name: _kerlink_account_name    
+    kerlink-account-name: _kerlink_account_name

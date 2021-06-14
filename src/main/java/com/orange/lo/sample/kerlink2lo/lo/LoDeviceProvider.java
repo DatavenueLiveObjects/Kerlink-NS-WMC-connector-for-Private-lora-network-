@@ -9,7 +9,6 @@ package com.orange.lo.sample.kerlink2lo.lo;
 
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkProperties;
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
-import com.orange.lo.sdk.LOApiClient;
 import com.orange.lo.sdk.rest.devicemanagement.DeviceManagement;
 import com.orange.lo.sdk.rest.devicemanagement.GetDevicesFilter;
 import com.orange.lo.sdk.rest.devicemanagement.Inventory;
@@ -33,10 +32,14 @@ import static com.orange.lo.sdk.rest.devicemanagement.Groups.DEFAULT_GROUP_ID;
 @Component
 public class LoDeviceProvider {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final String ID_PADDING = "urn:lo:nsid:x-connector:";
+    public static final String ONLINE = "ONLINE";
+    public static final String X_CONNECTOR = "x-connector";
     private final KerlinkPropertiesList kerlinkPropertiesList;
     private final Map<String, Group> loGroupsMap;
     private final Integer pageSize;
-    private final Policy<List<Device>> deviceRetryPolicy;
+    private final Policy<Device> deviceRetryPolicy;
+    private final Policy<List<Device>> deviceListRetryPolicy;
     private final Policy<Group> groupRetryPolicy;
     private final DeviceManagement deviceManagement;
     private final LoDeviceCache deviceCache;
@@ -49,6 +52,7 @@ public class LoDeviceProvider {
         this.loGroupsMap = new HashMap<>();
         pageSize = loProperties.getPageSize();
         deviceRetryPolicy = new RetryPolicy<>();
+        deviceListRetryPolicy = new RetryPolicy<>();
         groupRetryPolicy = new RetryPolicy<>();
     }
 
@@ -102,7 +106,7 @@ public class LoDeviceProvider {
                     .withGroupId(groupIdOrDefault)
                     .withLimit(pageSize)
                     .withOffset(offset * pageSize);
-            List<Device> loDevices = Failsafe.with(deviceRetryPolicy)
+            List<Device> loDevices = Failsafe.with(deviceListRetryPolicy)
                     .get(() -> inventory.getDevices(devicesFilter));
             LOG.trace("Got {} devices", loDevices.size());
             devices.addAll(loDevices);
@@ -126,18 +130,25 @@ public class LoDeviceProvider {
                 .withAvailable(true);
         Capabilities capabilities = new Capabilities()
                 .withCommand(interfaceCapability);
+        Definition definition = new Definition()
+                .withClientId(deviceId);
         Interface anInterface = new Interface()
+                .withConnector(X_CONNECTOR)
+                .withDefinition(definition)
                 .withCapabilities(capabilities);
         Device device = new Device()
                 .withGroup(s)
-                .withId(deviceId)
-                .withInterfaces(Arrays.asList(anInterface));
-        Failsafe.with(deviceRetryPolicy)
-                .run(() ->
+                .withId(ID_PADDING + deviceId)
+                .withName(deviceId)
+                .withInterfaces(Collections.singletonList(anInterface));
+        Device added = Failsafe.with(deviceRetryPolicy)
+                .get(() ->
                         deviceManagement
                                 .getInventory()
                                 .createDevice(device)
                 );
+
+        LOG.debug("Added device: {}", added);
         deviceCache.add(kerlinkAccountName, deviceId);
     }
 
@@ -145,7 +156,7 @@ public class LoDeviceProvider {
         if (LOG.isTraceEnabled()) {
             LOG.trace("Trying to delete device {} from LO", StringEscapeUtils.escapeHtml4(deviceId));
         }
-        Failsafe.with(deviceRetryPolicy)
+        Failsafe.with(deviceListRetryPolicy)
                 .run(() ->
                         deviceManagement
                                 .getInventory()

@@ -7,7 +7,9 @@ import org.springframework.stereotype.Component;
 public class PayloadDecoderFactory {
     @Bean
     public PayloadDecoder payloadDecoder(LoProperties properties) {
-        switch (properties.getMessageDecoder()) {
+        String decoderName = properties.getMessageDecoder();
+        String notNullDecoderName = decoderName != null ? decoderName : "";
+        switch (notNullDecoderName) {
             case "BASE64":
                 return PayloadDecoder.BASE64;
             case "HEXA":

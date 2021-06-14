@@ -1,18 +1,21 @@
-/** 
-* Copyright (c) Orange. All Rights Reserved.
-* 
-* This source code is licensed under the MIT license found in the 
-* LICENSE file in the root directory of this source tree. 
-*/
+/**
+ * Copyright (c) Orange. All Rights Reserved.
+ * <p>
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 
 package com.orange.lo.sample.kerlink2lo.kerlink;
 
-import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.model.EndDeviceDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.model.JwtDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.model.LinkDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.model.PaginatedDto;
-import com.orange.lo.sample.kerlink2lo.kerlink.model.UserDto;
+import com.orange.lo.sample.kerlink2lo.kerlink.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.client.RestTemplate;
 
 import java.lang.invoke.MethodHandles;
 import java.net.URI;
@@ -21,28 +24,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.web.client.RestTemplate;
-
 @EnableScheduling
 public class KerlinkApi {
-
+    public static final String DATA_DOWN_PATH = "/application/dataDown";
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String NEXT = "next";
+    private static final int COMMAND_OFFSET = (DATA_DOWN_PATH + "/").length();
     private final RestTemplate restTemplate;
     private final KerlinkProperties kerlinkProperties;
-    private HttpEntity<Void> httpEntity;
     private final String firstHref;
+    private HttpEntity<Void> httpEntity;
     private String token;
 
     public KerlinkApi(KerlinkProperties kerlinkProperties, @Qualifier("kerlinkRestTemplate") RestTemplate restTemplate) {
@@ -63,7 +54,7 @@ public class KerlinkApi {
             ResponseEntity<JwtDto> responseEntity = restTemplate.postForEntity(url, userDto, JwtDto.class);
             if (responseEntity.getStatusCode() == HttpStatus.CREATED) {
                 JwtDto body = responseEntity.getBody();
-                if(Objects.isNull(body))  {
+                if (Objects.isNull(body)) {
                     throw new IllegalArgumentException("Kerlink token is null");
                 }
                 this.token = "Bearer " + body.getToken();
@@ -99,12 +90,11 @@ public class KerlinkApi {
     }
 
     public Optional<String> sendCommand(DataDownDto dataDownDto) {
-        String url = kerlinkProperties.getBaseUrl() + "/application/dataDown";
+        String url = kerlinkProperties.getBaseUrl() + DATA_DOWN_PATH;
         HttpEntity<DataDownDto> dataDownDtoHttpEntity = prepareHttpEntity(token, dataDownDto);
         ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, dataDownDtoHttpEntity, Void.class);
         URI location = response.getHeaders().getLocation();
-        // TODO: What is that magic 22?
-        String commandId =  location != null ? location.getPath().substring(22) : null;
+        String commandId = location != null ? location.getPath().substring(COMMAND_OFFSET) : null;
         return Optional.ofNullable(commandId);
     }
 

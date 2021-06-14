@@ -7,11 +7,11 @@
 
 package com.orange.lo.sample.kerlink2lo.lo;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkApi;
 import com.orange.lo.sdk.LOApiClient;
 import com.orange.lo.sdk.LOApiClientParameters;
 import com.orange.lo.sdk.externalconnector.DataManagementExtConnector;
+import com.orange.lo.sdk.externalconnector.DataManagementExtConnectorCommandCallback;
 import com.orange.lo.sdk.fifomqtt.DataManagementFifoCallback;
 import com.orange.lo.sdk.rest.devicemanagement.DeviceManagement;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
@@ -26,17 +26,16 @@ import java.util.Map;
 public class LoConfig {
 
     @Bean
-    public LOApiClientParameters loApiClientParameters(LoProperties loProperties, DataManagementFifoCallback dataManagementFifoCallback) {
+    public LOApiClientParameters loApiClientParameters(LoProperties loProperties, DataManagementExtConnectorCommandCallback dataManagementExtConnectorCommandCallback) {
         return LOApiClientParameters.builder()
                 .apiKey(loProperties.getApiKey())
                 .connectionTimeout(loProperties.getConnectionTimeout())
                 .automaticReconnect(loProperties.getAutomaticReconnect())
                 .hostname(loProperties.getHostname())
-                .topics(Collections.singletonList(loProperties.getTopic()))
                 .messageQos(loProperties.getMessageQos())
                 .keepAliveIntervalSeconds(loProperties.getKeepAliveIntervalSeconds())
                 .mqttPersistenceDataDir(loProperties.getMqttPersistenceDir())
-                .dataManagementMqttCallback(dataManagementFifoCallback)
+                .dataManagementExtConnectorCommandCallback(dataManagementExtConnectorCommandCallback)
                 .build();
     }
 
@@ -46,8 +45,8 @@ public class LoConfig {
     }
 
     @Bean
-    public DataManagementFifoCallback messageListener(CommandMapper commandMapper, Map<String, KerlinkApi> kerlinkApiMap, LoDeviceCache deviceCache, ObjectMapper objectMapper) {
-        return new MessageListener(commandMapper, kerlinkApiMap, deviceCache, objectMapper);
+    public MessageListener messageListener(CommandMapper commandMapper, Map<String, KerlinkApi> kerlinkApiMap, LoDeviceCache deviceCache) {
+        return new MessageListener(commandMapper, kerlinkApiMap, deviceCache);
     }
 
     @Bean
