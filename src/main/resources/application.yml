@@ -7,7 +7,6 @@ spring:
 lo:
   hostname: liveobjects.orange-business.com
   api-key: _api_key_
-  topic:
   keep-alive-interval-seconds: 30
   automatic-reconnect: true
   message-qos: 1
@@ -21,7 +20,6 @@ kerlink-list:
     base-url: https://_your_wmc_host_/gms
     login: _kerlink_login_
     password: _kerlink_password
-    login-interval: 32400000
     page-size: 20
     kerlink-account-name: _kerlink_account_name
 
@@ -29,6 +27,5 @@ kerlink-list:
     base-url: https://_your_wmc_host_/gms
     login: _kerlink_login_
     password: _kerlink_password
-    login-interval: 32400000
     page-size: 20
     kerlink-account-name: _kerlink_account_name

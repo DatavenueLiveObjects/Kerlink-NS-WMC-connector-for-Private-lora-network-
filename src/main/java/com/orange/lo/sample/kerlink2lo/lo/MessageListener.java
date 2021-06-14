@@ -34,22 +34,8 @@ public class MessageListener implements DataManagementExtConnectorCommandCallbac
 
     @Override
     public Object onCommandRequest(CommandRequest commandRequest) {
-        // If this throws, the whole thing seems to stop responding
-        try {
-            // TODO: Wrap only the parts that explode
-            actualOnCommandRequest(commandRequest);
-        } catch (NullPointerException ex) {
-            LOG.warn("TODO: Proper warning", ex);
-        } catch (Exception ex) {
-            LOG.error("TODO: Proper error", ex);
-        }
-
-        // Returning null, because non-null response would indicate a finished command
-        return null;
-    }
-
-
-    public Object actualOnCommandRequest(CommandRequest commandRequest) {
+        // If this throws, the whole thing seems to stop responding to commands
+        // TODO: Exception handling
         LOG.trace("Got CommandRequest {}", commandRequest);
         DataDownDto dataDownDto = prepareDataDown(commandRequest);
 
@@ -61,6 +47,7 @@ public class MessageListener implements DataManagementExtConnectorCommandCallbac
             LOG.trace("Put to commandMapper: kerlinkID = {}, loId = {}, nodeId = {}", commandId, commandRequest.getId(), commandRequest.getNodeId());
         }
 
+        // Returning null, because non-null response would indicate a finished command
         return null;
     }
 

@@ -9,9 +9,7 @@ package com.orange.lo.sample.kerlink2lo.lo;
 
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkProperties;
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
-import com.orange.lo.sdk.rest.devicemanagement.DeviceManagement;
-import com.orange.lo.sdk.rest.devicemanagement.GetDevicesFilter;
-import com.orange.lo.sdk.rest.devicemanagement.Inventory;
+import com.orange.lo.sdk.rest.devicemanagement.*;
 import com.orange.lo.sdk.rest.model.*;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.Policy;
@@ -43,6 +41,7 @@ public class LoDeviceProvider {
     private final Policy<Group> groupRetryPolicy;
     private final DeviceManagement deviceManagement;
     private final LoDeviceCache deviceCache;
+    private Policy<List<Group>> groupListRetryPolicy;
 
     public LoDeviceProvider(LoProperties loProperties, KerlinkPropertiesList kerlinkPropertiesList, DeviceManagement deviceManagement, LoDeviceCache deviceCache) {
         this.kerlinkPropertiesList = kerlinkPropertiesList;
@@ -54,6 +53,7 @@ public class LoDeviceProvider {
         deviceRetryPolicy = new RetryPolicy<>();
         deviceListRetryPolicy = new RetryPolicy<>();
         groupRetryPolicy = new RetryPolicy<>();
+        groupListRetryPolicy = new RetryPolicy<>();
     }
 
     @PostConstruct
@@ -75,10 +75,18 @@ public class LoDeviceProvider {
         Set<String> kerlinkAccountNames = kerlinkPropertiesList.getKerlinkList().stream().map(KerlinkProperties::getKerlinkAccountName).collect(Collectors.toSet());
         LOG.debug("Trying to get existing groups");
 
-        List<Group> groups = deviceManagement
-                .getGroups()
-                .getGroups();
-        groups.forEach(g -> loGroupsMap.put(g.getPathNode(), g));
+        for (int offset = 0; ; offset++) {
+            GetGroupsFilter getGroupsFilter = new GetGroupsFilter()
+                    .withLimit(pageSize)
+                    .withOffset(offset * pageSize);
+            List<Group> groupSubset = Failsafe.with(groupListRetryPolicy)
+                    .get(() -> deviceManagement.getGroups().getGroups(getGroupsFilter));
+            groupSubset.forEach(g -> loGroupsMap.put(g.getPathNode(), g));
+
+            if (groupSubset.size() < pageSize) {
+                break;
+            }
+        }
 
         kerlinkAccountNames.forEach(accountName -> {
             if (!loGroupsMap.containsKey(accountName)) {

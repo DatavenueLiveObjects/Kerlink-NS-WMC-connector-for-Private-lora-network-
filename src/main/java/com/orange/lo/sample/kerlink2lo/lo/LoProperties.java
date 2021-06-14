@@ -3,13 +3,12 @@ package com.orange.lo.sample.kerlink2lo.lo;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;
 
-@ConfigurationProperties(prefix = "lo")
 @ConstructorBinding
+@ConfigurationProperties(prefix = "lo")
 public class LoProperties {
 
     private final String hostname;
     private final String apiKey;
-    private final String topic;
     private final String mqttPersistenceDir;
     private final String messageDecoder;
     private final Boolean automaticReconnect;
@@ -21,7 +20,6 @@ public class LoProperties {
     public LoProperties(
             String hostname,
             String apiKey,
-            String topic,
             Integer messageQos,
             String mqttPersistenceDir,
             Integer keepAliveIntervalSeconds,
@@ -29,7 +27,6 @@ public class LoProperties {
             Boolean automaticReconnect, String messageDecoder, Integer pageSize) {
         this.hostname = hostname;
         this.apiKey = apiKey;
-        this.topic = topic;
         this.messageQos = messageQos;
         this.mqttPersistenceDir = mqttPersistenceDir;
         this.keepAliveIntervalSeconds = keepAliveIntervalSeconds;
@@ -45,10 +42,6 @@ public class LoProperties {
 
     public String getApiKey() {
         return apiKey;
-    }
-
-    public String getTopic() {
-        return topic;
     }
 
     public Integer getMessageQos() {
