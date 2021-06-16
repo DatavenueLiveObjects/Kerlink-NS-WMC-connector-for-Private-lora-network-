@@ -28,14 +28,14 @@ public class LoApiExternalConnectorService implements ExternalConnectorService {
     private final LoDeviceCache deviceCache;
     private final DataManagementExtConnector loApiDataManagementExtConnector;
     private final LoDeviceProvider loDeviceProvider;
-    private final PayloadDecoder payloadDecoder;
+    private final Optional<String> connectorDecoderName;
 
-    public LoApiExternalConnectorService(ExternalConnectorCommandResponseWrapper externalConnectorCommandResponseWrapper, LoDeviceCache deviceCache, LoDeviceProvider loDeviceProvider, PayloadDecoder payloadDecoder, DataManagementExtConnector dataManagementExtConnector) {
+    public LoApiExternalConnectorService(ExternalConnectorCommandResponseWrapper externalConnectorCommandResponseWrapper, LoDeviceCache deviceCache, LoDeviceProvider loDeviceProvider, PayloadDecoder connectorDecoder, DataManagementExtConnector dataManagementExtConnector) {
         this.externalConnectorCommandResponseWrapper = externalConnectorCommandResponseWrapper;
         this.deviceCache = deviceCache;
         this.loApiDataManagementExtConnector = dataManagementExtConnector;
         this.loDeviceProvider = loDeviceProvider;
-        this.payloadDecoder = payloadDecoder;
+        this.connectorDecoderName = connectorDecoder.metadataName();
     }
 
     @PostConstruct
@@ -50,12 +50,12 @@ public class LoApiExternalConnectorService implements ExternalConnectorService {
             createDevice(deviceId, kerlinkAccountName);
         }
         DataMessage dataMessage = new DataMessage();
-        String decodedPayload = payloadDecoder.decode(dataUpDto.getPayload());
+        PayloadDecoder messageDecoder = PayloadDecoderFactory.payloadDecoder(dataUpDto.getEncodingType());
+        String decodedPayload = messageDecoder.decode(dataUpDto.getPayload());
         dataMessage.setValue(decodedPayload);
 
-        Optional<String> metadataName = payloadDecoder.metadataName();
-        if (metadataName.isPresent()) {
-            dataMessage.setMetadata(new Metadata(metadataName.get()));
+        if (connectorDecoderName.isPresent()) {
+            dataMessage.setMetadata(new Metadata(connectorDecoderName.get()));
         }
         loApiDataManagementExtConnector.sendMessage(deviceId, dataMessage);
     }
