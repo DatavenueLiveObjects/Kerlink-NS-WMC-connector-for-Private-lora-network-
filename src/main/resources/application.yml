@@ -15,6 +15,9 @@ lo:
   page-size: 20
   synchronization-device-interval: PT10M
 
+kerlink-global:
+  login-interval: PT5H
+
 kerlink-list:
   -
     base-url: https://_your_wmc_host_/gms

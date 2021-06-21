@@ -3,10 +3,11 @@ package com.orange.lo.sample.kerlink2lo.kerlink;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties()
+@ConfigurationProperties
 public class KerlinkPropertiesList {
 
     private final List<KerlinkProperties> kerlinkList;

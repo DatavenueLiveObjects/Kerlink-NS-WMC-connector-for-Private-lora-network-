@@ -43,7 +43,6 @@ public class KerlinkApi {
         login();
     }
 
-    @Scheduled(fixedRateString = "${kerlink.login-interval}")
     public void login() {
         LOG.info("Trying to login and get bearer token");
         UserDto userDto = new UserDto();
