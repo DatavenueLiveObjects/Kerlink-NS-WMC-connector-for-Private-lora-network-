@@ -58,4 +58,9 @@ public class LoConfig {
     public DataManagementExtConnector externalConnector(LOApiClient loApiClient) {
         return loApiClient.getDataManagementExtConnector();
     }
+
+    @Bean
+    public GroupCache groupCache() {
+        return new GroupCache();
+    }
 }
