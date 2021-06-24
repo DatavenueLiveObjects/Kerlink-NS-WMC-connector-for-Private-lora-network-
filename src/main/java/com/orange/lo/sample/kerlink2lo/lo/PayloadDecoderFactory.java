@@ -10,7 +10,6 @@ package com.orange.lo.sample.kerlink2lo.lo;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
-@Component
 public class PayloadDecoderFactory {
 
     public static PayloadDecoder payloadDecoder(String decoderName) {
