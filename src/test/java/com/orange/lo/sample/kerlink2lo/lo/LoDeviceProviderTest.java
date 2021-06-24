@@ -19,10 +19,10 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
-class GroupSynchronizerTest {
+class LoDeviceProviderTest {
 
     private DeviceManagement deviceManagement;
-    private GroupSynchronizer groupSynchronizer;
+    private LoDeviceProvider loDeviceProvider;
 
     @BeforeEach
     void setUp() {
@@ -32,7 +32,8 @@ class GroupSynchronizerTest {
         KerlinkPropertiesList kerlinkPropertiesList = new KerlinkPropertiesList(kerlinkList);
         deviceManagement = Mockito.mock(DeviceManagement.class);
         GroupCache groupCache = new GroupCache();
-        groupSynchronizer = new GroupSynchronizer(loProperties, kerlinkPropertiesList, deviceManagement, groupCache);
+        LoDeviceCache deviceCache = Mockito.mock(LoDeviceCache.class);
+        loDeviceProvider = new LoDeviceProvider(loProperties, deviceManagement, deviceCache, groupCache, kerlinkPropertiesList);
     }
 
     @Test
@@ -46,7 +47,7 @@ class GroupSynchronizerTest {
                 .thenReturn(groupList);
         when(deviceManagement.getGroups()).thenReturn(groups);
 
-        Map<String, Group> retrievedGroups = groupSynchronizer.retrieveGroups();
+        Map<String, Group> retrievedGroups = loDeviceProvider.retrieveGroups();
 
         assertEquals(retrievedGroups.values().stream().findAny().get(), oneGroup);
     }

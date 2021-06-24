@@ -7,8 +7,11 @@
 
 package com.orange.lo.sample.kerlink2lo.lo;
 
+import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkProperties;
+import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
 import com.orange.lo.sdk.rest.devicemanagement.DeviceManagement;
 import com.orange.lo.sdk.rest.devicemanagement.GetDevicesFilter;
+import com.orange.lo.sdk.rest.devicemanagement.GetGroupsFilter;
 import com.orange.lo.sdk.rest.devicemanagement.Inventory;
 import com.orange.lo.sdk.rest.model.*;
 import net.jodah.failsafe.Failsafe;
@@ -18,11 +21,12 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 
+import javax.annotation.PostConstruct;
 import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.orange.lo.sdk.rest.devicemanagement.Groups.DEFAULT_GROUP_ID;
 
@@ -34,14 +38,17 @@ public class LoDeviceProvider {
     private final Integer pageSize;
     private final Policy<Device> deviceRetryPolicy;
     private final Policy<List<Device>> deviceListRetryPolicy;
+    private final RetryPolicy<Group> groupRetryPolicy;
+    private final RetryPolicy<List<Group>> groupListRetryPolicy;
     private final DeviceManagement deviceManagement;
     private final LoDeviceCache deviceCache;
     private final GroupCache groupCache;
+    private final Set<String> kerlinkAccountNames;
 
     public LoDeviceProvider(LoProperties loProperties,
                             DeviceManagement deviceManagement,
                             LoDeviceCache deviceCache,
-                            GroupCache groupCache) {
+                            GroupCache groupCache, KerlinkPropertiesList kerlinkPropertiesList) {
         this.deviceManagement = deviceManagement;
         this.deviceCache = deviceCache;
 
@@ -49,6 +56,13 @@ public class LoDeviceProvider {
         this.groupCache = groupCache;
         deviceRetryPolicy = new RetryPolicy<>();
         deviceListRetryPolicy = new RetryPolicy<>();
+        this.kerlinkAccountNames = kerlinkPropertiesList.getKerlinkList()
+                .stream()
+                .map(KerlinkProperties::getKerlinkAccountName)
+                .collect(Collectors.toSet());
+
+        groupRetryPolicy = new RetryPolicy<>();
+        groupListRetryPolicy = new RetryPolicy<>();
     }
 
     public List<Device> getDevices(String groupName) {
@@ -122,6 +136,60 @@ public class LoDeviceProvider {
                                 .deleteDevice(deviceId)
                 );
         deviceCache.delete(deviceId);
+    }
+
+    @PostConstruct
+    public void postConstruct() {
+        LOG.info("Managing group of devices");
+        try {
+            synchronizeGroups();
+        } catch (HttpClientErrorException e) {
+            LOG.error("Cannot create group \n {}", e.getResponseBodyAsString());
+            System.exit(1);
+        } catch (Exception e) {
+            LOG.error("Unexpected error while managing group {}", e.getMessage());
+            System.exit(1);
+        }
+    }
+
+    private void synchronizeGroups() {
+        LOG.debug("Trying to get existing groups");
+
+        Map<String, Group> allGroups = retrieveGroups();
+        this.groupCache.putAll(allGroups);
+
+        this.kerlinkAccountNames.forEach(accountName -> {
+            if (!allGroups.containsKey(accountName)) {
+                LOG.debug("Group {} not found, trying to create new group", accountName);
+                Group group = Failsafe.with(this.groupRetryPolicy)
+                        .get(() -> this.deviceManagement
+                                .getGroups()
+                                .createGroup(accountName)
+                        );
+                this.groupCache.put(accountName, group);
+                LOG.debug("Group {} created", accountName);
+            }
+        });
+        LOG.debug("kerlinkAccountNames: {}", this.kerlinkAccountNames);
+        LOG.debug("existing groups: {}", this.groupCache);
+    }
+
+    public Map<String, Group> retrieveGroups() {
+        Map<String, Group> allGroups = new HashMap<>();
+        for (int offset = 0; ; offset++) {
+            GetGroupsFilter getGroupsFilter = new GetGroupsFilter()
+                    .withLimit(this.pageSize)
+                    .withOffset(offset * this.pageSize);
+            List<Group> groupSubset = Failsafe.with(this.groupListRetryPolicy)
+                    .get(() -> this.deviceManagement.getGroups().getGroups(getGroupsFilter));
+            groupSubset.forEach(g -> allGroups.put(g.getPathNode(), g));
+
+            if (groupSubset.size() < this.pageSize) {
+                break;
+            }
+        }
+
+        return allGroups;
     }
 
 }
