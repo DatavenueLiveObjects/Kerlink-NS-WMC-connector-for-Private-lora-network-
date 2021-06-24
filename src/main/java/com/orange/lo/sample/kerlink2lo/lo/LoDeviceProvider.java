@@ -1,6 +1,6 @@
-/**
+/*
  * Copyright (c) Orange. All Rights Reserved.
- * <p>
+ *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
@@ -20,7 +20,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.lang.invoke.MethodHandles;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static com.orange.lo.sdk.rest.devicemanagement.Groups.DEFAULT_GROUP_ID;
 

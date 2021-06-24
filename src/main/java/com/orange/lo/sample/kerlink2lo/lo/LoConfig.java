@@ -1,6 +1,6 @@
-/**
+/*
  * Copyright (c) Orange. All Rights Reserved.
- * <p>
+ *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
@@ -12,13 +12,11 @@ import com.orange.lo.sdk.LOApiClient;
 import com.orange.lo.sdk.LOApiClientParameters;
 import com.orange.lo.sdk.externalconnector.DataManagementExtConnector;
 import com.orange.lo.sdk.externalconnector.DataManagementExtConnectorCommandCallback;
-import com.orange.lo.sdk.fifomqtt.DataManagementFifoCallback;
 import com.orange.lo.sdk.rest.devicemanagement.DeviceManagement;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Collections;
 import java.util.Map;
 
 @Configuration
@@ -40,7 +38,7 @@ public class LoConfig {
     }
 
     @Bean
-    public LOApiClient LOApiClient(LOApiClientParameters parameters) {
+    public LOApiClient loApiclient(LOApiClientParameters parameters) {
         return new LOApiClient(parameters);
     }
 

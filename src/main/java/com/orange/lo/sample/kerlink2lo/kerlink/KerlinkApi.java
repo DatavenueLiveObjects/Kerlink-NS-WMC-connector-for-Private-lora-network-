@@ -1,6 +1,6 @@
-/**
+/*
  * Copyright (c) Orange. All Rights Reserved.
- * <p>
+ *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
@@ -13,8 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.client.RestTemplate;
 
 import java.lang.invoke.MethodHandles;
@@ -24,7 +22,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-@EnableScheduling
 public class KerlinkApi {
     public static final String DATA_DOWN_PATH = "/application/dataDown";
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());

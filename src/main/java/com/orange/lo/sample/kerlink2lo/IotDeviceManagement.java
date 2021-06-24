@@ -1,9 +1,9 @@
-/** 
-* Copyright (c) Orange. All Rights Reserved.
-* 
-* This source code is licensed under the MIT license found in the 
-* LICENSE file in the root directory of this source tree. 
-*/
+/*
+ * Copyright (c) Orange. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 
 package com.orange.lo.sample.kerlink2lo;
 
@@ -12,7 +12,6 @@ import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
 import com.orange.lo.sample.kerlink2lo.lo.ExternalConnectorService;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceCache;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceProvider;
-import com.orange.lo.sample.kerlink2lo.lo.LoProperties;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +40,7 @@ public class IotDeviceManagement {
     private final LoDeviceProvider loDeviceProvider;
     private final ExternalConnectorService externalConnectorService;
     private final LoDeviceCache deviceCache;
-    private static final int synchronizationThreadPoolSize = 10;
+    private static final int SYNCHRONIZATION_THREAD_POOL_SIZE = 10;
     private static final String devicePrefix = "urn:lo:nsid:x-connector:";
 
     public IotDeviceManagement(Map<String, KerlinkApi> kerlinkApiMap, LoDeviceProvider loDeviceProvider, ExternalConnectorService externalConnectorService, KerlinkPropertiesList kerlinkPropertiesList, LoDeviceCache deviceCache) {
@@ -85,7 +84,7 @@ public class IotDeviceManagement {
                 LOG.debug("Devices to remove from LO: {}", devicesToRemoveFromLo);
 
                 if (devicesToAddToLo.size() + devicesToRemoveFromLo.size() > 0) {
-                    ThreadPoolExecutor synchronizingExecutor = new ThreadPoolExecutor(synchronizationThreadPoolSize, synchronizationThreadPoolSize, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<>(devicesToAddToLo.size() + devicesToRemoveFromLo.size()));
+                    ThreadPoolExecutor synchronizingExecutor = new ThreadPoolExecutor(SYNCHRONIZATION_THREAD_POOL_SIZE, SYNCHRONIZATION_THREAD_POOL_SIZE, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<>(devicesToAddToLo.size() + devicesToRemoveFromLo.size()));
 
                     for (String deviceId : devicesToAddToLo) {
                         synchronizingExecutor.execute(() -> {
