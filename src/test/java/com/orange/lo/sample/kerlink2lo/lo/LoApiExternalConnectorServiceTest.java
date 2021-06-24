@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
 import com.orange.lo.sdk.externalconnector.DataManagementExtConnector;
 import com.orange.lo.sdk.externalconnector.model.DataMessage;
+import com.orange.lo.sdk.externalconnector.model.Value;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LoApiExternalConnectorServiceTest {
 
@@ -45,7 +47,8 @@ class LoApiExternalConnectorServiceTest {
         loApiExternalConnectorService.sendMessage(dataUpDto, KERLINK_ACCOUNT_NAME);
 
         Mockito.verify(dataManagementExtConnector).sendMessage(Mockito.anyString(), dataMessageArgumentCaptor.capture());
-        assertEquals(EXPECTED_DECODED_PAYLOAD, dataMessageArgumentCaptor.getValue().getValue());
+        assertTrue(dataMessageArgumentCaptor.getValue().getValue() instanceof Value);
+        assertEquals(EXPECTED_DECODED_PAYLOAD, ((Value)dataMessageArgumentCaptor.getValue().getValue()).getPayload());
     }
 
     private DataUpDto buildExampleDataUpDto() throws IOException {

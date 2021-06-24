@@ -65,15 +65,7 @@ public class LoApiExternalConnectorService {
             dataMessage.setMetadata(new Metadata(connectorDecoder));
         }
 
-        if(LOG.isDebugEnabled()) {
-            String msg = null;
-            try {
-                msg = new ObjectMapper().writeValueAsString(dataMessage);
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-            LOG.debug("Sending message to device {} on account {}:\n{}", deviceId, kerlinkAccountName, msg);
-        }
+        LOG.debug("Sending message to device {} on account {}", deviceId, kerlinkAccountName);
         loApiDataManagementExtConnector.sendMessage(deviceId, dataMessage);
     }
 
