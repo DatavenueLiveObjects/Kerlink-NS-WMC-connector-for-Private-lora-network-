@@ -12,11 +12,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class PayloadDecoderFactory {
-    @Bean
-    public PayloadDecoder payloadDecoder(LoProperties properties) {
-        String decoderName = properties.getMessageDecoder();
-        return payloadDecoder(decoderName);
-    }
 
     public static PayloadDecoder payloadDecoder(String decoderName) {
         String notNullDecoderName = decoderName != null ? decoderName : "";
