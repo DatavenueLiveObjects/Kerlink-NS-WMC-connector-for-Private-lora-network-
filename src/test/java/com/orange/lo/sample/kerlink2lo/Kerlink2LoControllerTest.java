@@ -3,7 +3,7 @@ package com.orange.lo.sample.kerlink2lo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
-import com.orange.lo.sample.kerlink2lo.lo.ExternalConnectorService;
+import com.orange.lo.sample.kerlink2lo.lo.LoApiExternalConnectorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -20,7 +20,7 @@ class Kerlink2LoControllerTest {
 
     @BeforeEach
     private void setUp() {
-        ExternalConnectorService externalConnectorService = Mockito.mock(ExternalConnectorService.class);
+        LoApiExternalConnectorService externalConnectorService = Mockito.mock(LoApiExternalConnectorService.class);
         kerlink2LoController = new Kerlink2LoController(externalConnectorService);
     }
 

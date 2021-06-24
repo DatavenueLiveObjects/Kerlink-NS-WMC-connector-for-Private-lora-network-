@@ -9,7 +9,7 @@ package com.orange.lo.sample.kerlink2lo;
 
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
-import com.orange.lo.sample.kerlink2lo.lo.ExternalConnectorService;
+import com.orange.lo.sample.kerlink2lo.lo.LoApiExternalConnectorService;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +31,9 @@ public class Kerlink2LoController {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String KERLINK_ACCOUNT_HEADER = "Kerlink-Account";
 
-    private final ExternalConnectorService externalConnectorService;
+    private final LoApiExternalConnectorService externalConnectorService;
 
-    public Kerlink2LoController(ExternalConnectorService externalConnectorService) {
+    public Kerlink2LoController(LoApiExternalConnectorService externalConnectorService) {
         this.externalConnectorService = externalConnectorService;
     }
 

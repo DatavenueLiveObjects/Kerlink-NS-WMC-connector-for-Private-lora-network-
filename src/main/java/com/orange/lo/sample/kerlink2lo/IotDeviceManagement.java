@@ -9,7 +9,7 @@ package com.orange.lo.sample.kerlink2lo;
 
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkApi;
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
-import com.orange.lo.sample.kerlink2lo.lo.ExternalConnectorService;
+import com.orange.lo.sample.kerlink2lo.lo.LoApiExternalConnectorService;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceCache;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceProvider;
 import org.apache.commons.text.StringEscapeUtils;
@@ -38,12 +38,12 @@ public class IotDeviceManagement {
     private final KerlinkPropertiesList kerlinkPropertiesList;
     private final Map<String, KerlinkApi> kerlinkApiMap;
     private final LoDeviceProvider loDeviceProvider;
-    private final ExternalConnectorService externalConnectorService;
+    private final LoApiExternalConnectorService externalConnectorService;
     private final LoDeviceCache deviceCache;
     private static final int SYNCHRONIZATION_THREAD_POOL_SIZE = 10;
     private static final String devicePrefix = "urn:lo:nsid:x-connector:";
 
-    public IotDeviceManagement(Map<String, KerlinkApi> kerlinkApiMap, LoDeviceProvider loDeviceProvider, ExternalConnectorService externalConnectorService, KerlinkPropertiesList kerlinkPropertiesList, LoDeviceCache deviceCache) {
+    public IotDeviceManagement(Map<String, KerlinkApi> kerlinkApiMap, LoDeviceProvider loDeviceProvider, LoApiExternalConnectorService externalConnectorService, KerlinkPropertiesList kerlinkPropertiesList, LoDeviceCache deviceCache) {
         this.kerlinkApiMap = kerlinkApiMap;
         this.loDeviceProvider = loDeviceProvider;
         this.externalConnectorService = externalConnectorService;

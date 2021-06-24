@@ -4,10 +4,7 @@ import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkApi;
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkProperties;
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.EndDeviceDto;
-import com.orange.lo.sample.kerlink2lo.lo.ExternalConnectorService;
-import com.orange.lo.sample.kerlink2lo.lo.LoDeviceCache;
-import com.orange.lo.sample.kerlink2lo.lo.LoDeviceProvider;
-import com.orange.lo.sample.kerlink2lo.lo.LoProperties;
+import com.orange.lo.sample.kerlink2lo.lo.*;
 import com.orange.lo.sdk.rest.model.Device;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
@@ -43,7 +40,7 @@ public class IotDeviceManagementTest {
     private LoDeviceProvider loDeviceProvider;
 
     @Mock
-    private ExternalConnectorService externalConnectorService;
+    private LoApiExternalConnectorService externalConnectorService;
 
     private LoDeviceCache loDeviceCache;
     @Autowired

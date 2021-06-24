@@ -22,7 +22,7 @@ import javax.annotation.PostConstruct;
 import java.util.Optional;
 
 @Service
-public class LoApiExternalConnectorService implements ExternalConnectorService {
+public class LoApiExternalConnectorService {
 
     private final ExternalConnectorCommandResponseWrapper externalConnectorCommandResponseWrapper;
     private final LoDeviceCache deviceCache;
@@ -43,7 +43,6 @@ public class LoApiExternalConnectorService implements ExternalConnectorService {
         loApiDataManagementExtConnector.connect();
     }
 
-    @Override
     public void sendMessage(DataUpDto dataUpDto, String kerlinkAccountName) {
         String deviceId = dataUpDto.getEndDevice().getDevEui();
         if (!deviceCache.contains(deviceId)) {
@@ -60,12 +59,10 @@ public class LoApiExternalConnectorService implements ExternalConnectorService {
         loApiDataManagementExtConnector.sendMessage(deviceId, dataMessage);
     }
 
-    @Override
     public void sendCommandResponse(DataDownEventDto dataDownEventDto) {
         externalConnectorCommandResponseWrapper.sendCommandResponse(dataDownEventDto);
     }
 
-    @Override
     public void createDevice(String kerlinkDeviceId, String kerlinkAccountName) {
         loDeviceProvider.addDevice(kerlinkDeviceId, kerlinkAccountName);
 
@@ -77,7 +74,6 @@ public class LoApiExternalConnectorService implements ExternalConnectorService {
         loApiDataManagementExtConnector.sendStatus(kerlinkDeviceId, nodeStatus);
     }
 
-    @Override
     public void deleteDevice(String loDeviceId) {
         loDeviceProvider.deleteDevice(loDeviceId);
     }
