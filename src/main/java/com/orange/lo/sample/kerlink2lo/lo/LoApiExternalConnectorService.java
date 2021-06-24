@@ -7,35 +7,41 @@
 
 package com.orange.lo.sample.kerlink2lo.lo;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
 import com.orange.lo.sdk.externalconnector.DataManagementExtConnector;
-import com.orange.lo.sdk.externalconnector.model.DataMessage;
-import com.orange.lo.sdk.externalconnector.model.Metadata;
-import com.orange.lo.sdk.externalconnector.model.NodeStatus;
+import com.orange.lo.sdk.externalconnector.model.*;
 import com.orange.lo.sdk.externalconnector.model.NodeStatus.Capabilities;
 import com.orange.lo.sdk.externalconnector.model.NodeStatus.Command;
-import com.orange.lo.sdk.externalconnector.model.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.Optional;
+import java.lang.invoke.MethodHandles;
 
 @Service
 public class LoApiExternalConnectorService {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final ExternalConnectorCommandResponseWrapper externalConnectorCommandResponseWrapper;
     private final LoDeviceCache deviceCache;
     private final DataManagementExtConnector loApiDataManagementExtConnector;
     private final LoDeviceProvider loDeviceProvider;
-    private final Optional<String> connectorDecoderName;
+    private final LoProperties loProperties;
 
-    public LoApiExternalConnectorService(ExternalConnectorCommandResponseWrapper externalConnectorCommandResponseWrapper, LoDeviceCache deviceCache, LoDeviceProvider loDeviceProvider, PayloadDecoder connectorDecoder, DataManagementExtConnector dataManagementExtConnector) {
+    public LoApiExternalConnectorService(ExternalConnectorCommandResponseWrapper externalConnectorCommandResponseWrapper,
+                                         LoDeviceCache deviceCache,
+                                         LoDeviceProvider loDeviceProvider,
+                                         DataManagementExtConnector dataManagementExtConnector,
+                                         LoProperties loProperties) {
         this.externalConnectorCommandResponseWrapper = externalConnectorCommandResponseWrapper;
         this.deviceCache = deviceCache;
         this.loApiDataManagementExtConnector = dataManagementExtConnector;
         this.loDeviceProvider = loDeviceProvider;
-        this.connectorDecoderName = connectorDecoder.metadataName();
+        this.loProperties = loProperties;
     }
 
     @PostConstruct
@@ -49,12 +55,24 @@ public class LoApiExternalConnectorService {
             createDevice(deviceId, kerlinkAccountName);
         }
         DataMessage dataMessage = new DataMessage();
-        PayloadDecoder messageDecoder = PayloadDecoderFactory.payloadDecoder(dataUpDto.getEncodingType());
-        String decodedPayload = messageDecoder.decode(dataUpDto.getPayload());
-        dataMessage.setValue(decodedPayload);
+        PayloadDecoder payloadDecoder = PayloadDecoderFactory.payloadDecoder(dataUpDto.getEncodingType());
+        String decodedPayload = payloadDecoder.decode(dataUpDto.getPayload());
+        Value value = new Value(decodedPayload);
+        dataMessage.setValue(value);
 
-        if (connectorDecoderName.isPresent()) {
-            dataMessage.setMetadata(new Metadata(connectorDecoderName.get()));
+        String connectorDecoder = loProperties.getMessageDecoder();
+        if(connectorDecoder != null && !connectorDecoder.isEmpty()) {
+            dataMessage.setMetadata(new Metadata(connectorDecoder));
+        }
+
+        if(LOG.isDebugEnabled()) {
+            String msg = null;
+            try {
+                msg = new ObjectMapper().writeValueAsString(dataMessage);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+            LOG.debug("Sending message to device {} on account {}:\n{}", deviceId, kerlinkAccountName, msg);
         }
         loApiDataManagementExtConnector.sendMessage(deviceId, dataMessage);
     }

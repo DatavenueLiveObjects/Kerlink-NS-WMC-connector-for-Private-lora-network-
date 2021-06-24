@@ -20,10 +20,6 @@ public enum PayloadDecoder {
         public String decode(String payload) {
             return payload;
         }
-        @Override
-        public Optional<String> metadataName() {
-            return Optional.empty();
-        }
     },
     BASE64 {
         @Override
@@ -45,7 +41,4 @@ public enum PayloadDecoder {
     };
 
     public abstract String decode(String payload);
-    public Optional<String> metadataName() {
-        return Optional.of(name());
-    }
 }

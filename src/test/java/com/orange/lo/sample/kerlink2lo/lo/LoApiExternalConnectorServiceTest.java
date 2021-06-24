@@ -31,14 +31,14 @@ class LoApiExternalConnectorServiceTest {
                 = Mockito.mock(LoDeviceProvider.class);
         LoDeviceCache deviceCache
                 = Mockito.mock(LoDeviceCache.class);
+        LoProperties loProperties = Mockito.mock(LoProperties.class);
         LoApiExternalConnectorService loApiExternalConnectorService =
                 new LoApiExternalConnectorService(
                         externalConnectorCommandResponseWrapper,
                         deviceCache,
                         loDeviceProvider,
-                        connectorDecoder,
-                        dataManagementExtConnector
-                );
+                        dataManagementExtConnector,
+                        loProperties);
         DataUpDto dataUpDto = buildExampleDataUpDto();
         ArgumentCaptor<DataMessage> dataMessageArgumentCaptor = ArgumentCaptor.forClass(DataMessage.class);
 

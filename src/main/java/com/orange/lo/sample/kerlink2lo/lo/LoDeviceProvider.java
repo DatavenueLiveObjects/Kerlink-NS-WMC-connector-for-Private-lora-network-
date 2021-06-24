@@ -104,7 +104,7 @@ public class LoDeviceProvider {
                 );
 
         LOG.debug("Added device: {}", added);
-        deviceCache.add(kerlinkAccountName, deviceId);
+        deviceCache.add(deviceId, kerlinkAccountName);
     }
 
     private Device buildDevice(String deviceId, Group group) {

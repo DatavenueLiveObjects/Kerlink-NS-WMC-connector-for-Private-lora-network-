@@ -50,6 +50,7 @@ public class Kerlink2LoController {
                 externalConnectorService.sendMessage(dataUpDto, kerlinkAccountName.get());
                 return ResponseEntity.ok().build();
             } else {
+                LOG.debug("Unknown KerlinkAccountName {}", StringEscapeUtils.escapeHtml4(kerlinkAccountName.orElse("")));
                 return ResponseEntity.notFound().build();
             }
         };
