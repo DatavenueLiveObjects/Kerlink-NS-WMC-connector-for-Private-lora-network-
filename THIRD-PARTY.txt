@@ -1,9 +1,9 @@
-COMPONENT                               | VERSION       | LICENCE                    | URL
-----------------------------------------------------------------------------------------------------------------------------------------------
-Spring Boot Starter                     | 2.1.8.RELEASE | Apache License 2.0         | https://www.apache.org/licenses/LICENSE-2.0
-Spring Boot Starter Web                 | 2.1.8.RELEASE | Apache License 2.0         | https://www.apache.org/licenses/LICENSE-2.0
-Spring Boot Starter Test                | 2.1.8.RELEASE | Apache License 2.0         | https://www.apache.org/licenses/LICENSE-2.0
-Spring Boot Configuration Processor     | 2.1.8.RELEASE | Apache License 2.0         | https://www.apache.org/licenses/LICENSE-2.0
-Eclipse Paho Client Mqttv3              | 1.2.4         | Eclipse Public License 2.0 | https://www.eclipse.org/legal/epl-v20.html
-Apache HttpComponents Client            | 4.5.9         | Apache License 2.0         | http://www.apache.org/licenses/LICENSE-2.0.txt
-Apache Commons Text                     | 1.9           | Apache License 2.0         | http://www.apache.org/licenses/LICENSE-2.0.txt
+COMPONENT                               | VERSION  | LICENCE            | URL
+----------------------------------------------------------------------------------------------------------------------
+Spring Boot Starter                     | 2.4.3    | Apache License 2.0 | https://www.apache.org/licenses/LICENSE-2.0
+Spring Boot Starter Web                 | 2.4.3    | Apache License 2.0 | https://www.apache.org/licenses/LICENSE-2.0
+Spring Boot Starter Test                | 2.4.3    | Apache License 2.0 | https://www.apache.org/licenses/LICENSE-2.0
+Spring Boot Configuration Processor     | 2.4.3    | Apache License 2.0 | https://www.apache.org/licenses/LICENSE-2.0
+Apache HttpComponents Client            | 4.5.9    | Apache License 2.0 | https://www.apache.org/licenses/LICENSE-2.0
+Apache Commons Text                     | 1.9      | Apache License 2.0 | https://www.apache.org/licenses/LICENSE-2.0
+Jodah Failsafe                          | 2.4.0    | Apache License 2.0 | https://www.apache.org/licenses/LICENSE-2.0
