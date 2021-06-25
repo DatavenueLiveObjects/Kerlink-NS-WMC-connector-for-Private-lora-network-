@@ -25,6 +25,6 @@ public class KerlinkLoginCaller {
 
     @Scheduled(fixedRateString = "${kerlink-global.login-interval}")
     public void doStuff() {
-        kerlinkApiList.forEach(api -> api.login());
+        kerlinkApiList.forEach(KerlinkApi::login);
     }
 }
