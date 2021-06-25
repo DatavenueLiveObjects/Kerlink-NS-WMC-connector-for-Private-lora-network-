@@ -12,7 +12,6 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 import java.util.Base64;
-import java.util.Optional;
 
 public enum PayloadDecoder {
     IDENTITY {

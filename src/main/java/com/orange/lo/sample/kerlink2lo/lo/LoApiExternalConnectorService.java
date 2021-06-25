@@ -7,8 +7,6 @@
 
 package com.orange.lo.sample.kerlink2lo.lo;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
 import com.orange.lo.sdk.externalconnector.DataManagementExtConnector;
