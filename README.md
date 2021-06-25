@@ -18,10 +18,10 @@ It can be only one instance of connector. Two or more instances connected to to 
 
 ## Technologies
 * Java 8
-* Spring Boot 2.1.8.RELEASE
-* Eclipse Paho 1.2.0
+* Spring Boot 2.4.3
 * Apache HttpComponents Client 4.5.9
 * Apache Commons Text 1.9
+* Jodah Failsafe 2.4.0
 
 ## Configuration
 All configuration can be found in **application.yaml** file located in src/main/resources
