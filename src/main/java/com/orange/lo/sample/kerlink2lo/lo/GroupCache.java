@@ -9,11 +9,11 @@ package com.orange.lo.sample.kerlink2lo.lo;
 
 import com.orange.lo.sdk.rest.model.Group;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GroupCache {
-    private final Map<String, Group> backingMap = new HashMap<>();
+    private final Map<String, Group> backingMap = new ConcurrentHashMap<>();
 
     public void put(String accountName, Group group) {
         backingMap.put(accountName, group);
