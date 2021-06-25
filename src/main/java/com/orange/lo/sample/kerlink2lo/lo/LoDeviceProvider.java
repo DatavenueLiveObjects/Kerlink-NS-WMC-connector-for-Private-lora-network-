@@ -155,9 +155,9 @@ public class LoDeviceProvider {
         LOG.debug("Trying to get existing groups");
 
         Map<String, Group> allGroups = retrieveGroups();
-        this.groupCache.putAll(allGroups);
+        groupCache.putAll(allGroups);
 
-        this.kerlinkAccountNames.forEach(accountName -> {
+        kerlinkAccountNames.forEach(accountName -> {
             if (!allGroups.containsKey(accountName)) {
                 LOG.debug("Group {} not found, trying to create new group", accountName);
                 Group group = Failsafe.with(this.groupRetryPolicy)
