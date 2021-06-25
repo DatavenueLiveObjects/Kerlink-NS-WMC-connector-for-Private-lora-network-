@@ -52,17 +52,16 @@ public class LoDeviceProvider {
         this.deviceManagement = deviceManagement;
         this.deviceCache = deviceCache;
 
-        pageSize = loProperties.getPageSize();
+        this.pageSize = loProperties.getPageSize();
         this.groupCache = groupCache;
-        deviceRetryPolicy = new RetryPolicy<>();
-        deviceListRetryPolicy = new RetryPolicy<>();
+        this.deviceRetryPolicy = new RetryPolicy<>();
+        this.deviceListRetryPolicy = new RetryPolicy<>();
+        this.groupRetryPolicy = new RetryPolicy<>();
+        this.groupListRetryPolicy = new RetryPolicy<>();
         this.kerlinkAccountNames = kerlinkPropertiesList.getKerlinkList()
                 .stream()
                 .map(KerlinkProperties::getKerlinkAccountName)
                 .collect(Collectors.toSet());
-
-        groupRetryPolicy = new RetryPolicy<>();
-        groupListRetryPolicy = new RetryPolicy<>();
     }
 
     public List<Device> getDevices(String groupName) {
