@@ -12,7 +12,7 @@ Three main features are:
 * **messages synchronization** - every message which will be send from device to Kerlink will appear in LO
 * **commands synchronization** - every command created in LO will be sent to Kerlink and status in LO will be updated
 
-One connector can handle many customers (many Kerlink account).  
+One connector can handle many customers (many Kerlink accounts).  
 
 It can be only one instance of connector. Two or more instances connected to to the same Kerlink accounts will cause problems.
 
@@ -27,94 +27,77 @@ It can be only one instance of connector. Two or more instances connected to to 
 All configuration can be found in **application.yaml** file located in src/main/resources
 
 ```
- 1 server:
- 2   port: 8080
- 3 spring:
- 4   application:
- 5     name: Kerlink2Lo
- 6     
- 7 lo:
- 8   api-key: _api_key_
- 9   api-url: https://liveobjects.orange-business.com/api/
-10   connector-api-key: _connector_api_key_
-11   connector-user: connector
-12   connector-mqtt-url: ssl://liveobjects.orange-business.com:8883
-13   
-14   synchronization-device-interval: 10000
-15   synchronization-thread-pool-size: 40
-16   
-17   page-size: 20
-18   device-prefix: 'urn:lo:nsid:x-connector:'
-19   
-20   message-sender-max-thread-pool-size: 100
-21   message-sender-min-thread-pool-size: 10
-22   message-qos: 1
-23   message-decoder: test_csv
-24   
-25 kerlink-list:
-26   -
-27     base-url: https://_your_wmc_host_/gms
-28     login: _kerlink_login_
-29     password: _kerlink_password
-30     login-interval: 32400000
-31     page-size: 20
-32     kerlink-account-name: _kerlink_account_name
-33     
-34   -
-35     base-url: https://_your_wmc_host_/gms
-36     login: _kerlink_login_
-37     password: _kerlink_password
-38     login-interval: 32400000
-39     page-size: 20
-40     kerlink-account-name: _kerlink_account_name    
-
+ 1  server:
+ 2    port: 8080
+ 3  spring:
+ 4    application:
+ 5      name: Kerlink2Lo
+    
+ 6  lo:
+ 7    hostname: liveobjects.orange-business.com
+ 8    api-key: _api_key_
+ 9    keep-alive-interval-seconds: 30
+10    automatic-reconnect: true
+11    message-qos: 1
+12    mqtt-persistence-dir: ${basedir:.}/temp/
+13    connection-timeout: 30000
+14    page-size: 20
+15    synchronization-device-interval: PT10M
+16    message-decoder: test_csv
+    
+17  kerlink-global:
+18    login-interval: PT5H
+    
+19  kerlink-list:
+20    -
+21      base-url: https://_your_wmc_host_/gms
+22      login: _kerlink_login_
+23      password: _kerlink_password
+24      page-size: 20
+25      kerlink-account-name: _kerlink_account_name
+    
+26    -
+27      base-url: https://_your_wmc_host_/gms
+28      login: _kerlink_login_
+29      password: _kerlink_password
+30      page-size: 20
+31      kerlink-account-name: _kerlink_account_name
 
 ```
 You can change all values but the most important are:
 
 **2** - Tomcat port
 
-**8** - Live Objects API key with at least DEVICE\_R and DEVICE\_W roles 
+**7** - Live Objects REST API url
 
-**9** - Live Objects REST API url
+**8** - Live Objects API key with at least DEVICE\_R and DEVICE\_W roles 
 
 **10** - Live Objects API key with at least CONNECTOR_ACCESS role
 
-**11** - Do not change it
+**11** - message QoS
 
-**12** - Live Objects mqtt url
+**14** - Live Objects REST page size (max 1000)
 
-**14** - Interval between devices synchronization process (in milliseconds)
+**15** - Interval between devices synchronization process (using Java Duration syntax, or in milliseconds)
 
-**15** - How many threads will be used in devices synchronization process
+**16** - Name of Live Objects message decoder. Can be empty but if set it will be applied to all messages from every device
 
-**17** - Live Objects REST page size (max 1000)
+**18** - Interval login attempts to Kerlink (in Java Duration syntax, or in milliseconds). Should be shorter than Kerlink
+JWT token expiration period (typically 10 hours).
 
-**18** - Do not change it
+**20** - First Kerlink account configuration
 
-**20** - How many threads (at least) will be used in message synchronization process
+**21** - Kerlink REST API url
 
-**21** - How many threads (at most) will be used in message synchronization process
+**22** -  Kerlink user
 
-**22** - message QoS
+**23** -  Kerlink password
 
-**23** - Name of Live Objects message decoder. Can be empty but if set it will be applied to all messages from every device
+**24** - Kerlink REST page size (max 1000)
 
-**26** - First Kerlink account configuration
+**25** - Kerlink account name (the same device group will be created in Live Objects Platform)
 
-**27** - Kerlink REST API url
-
-**28** -  Kerlink user
-
-**29** -  Kerlink password
-
-**30** -  JWT token you receive after login is valid for 10 hours so we need to refresh this token every some time less than 10 hours. In this example refresh process is executed every 9h * 60m * 60s * 1000 ms = 32400000
-
-**31** - Kerlink REST page size (max 1000)
-
-**32** - Kerlink account name (the same device group will be created in Live Objects Platform)
-
-**34** - Second Kerlink account configuration (you can add as many Kerlink accounts as you wish)
+**26** - Second Kerlink account configuration (you can add as many Kerlink accounts as you wish)
 
 
 #### Loging
@@ -135,7 +118,7 @@ You can easily find devices group in main devices view. Just go to **devices** i
 
 ![Devices](/assets/devices.png)
 
-#### Kerlink Push mechanizm
+#### Kerlink Push mechanism
 Login to Kerlink Wanesy Management Center and go to **Administration -> Clusters -> Push Configurations**
 
 ![Push Confiuration](/assets/push_configuration.png)
