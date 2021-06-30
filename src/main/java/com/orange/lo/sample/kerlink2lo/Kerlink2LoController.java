@@ -1,35 +1,29 @@
-/** 
-* Copyright (c) Orange. All Rights Reserved.
-* 
-* This source code is licensed under the MIT license found in the 
-* LICENSE file in the root directory of this source tree. 
-*/
+/*
+ * Copyright (c) Orange. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 
 package com.orange.lo.sample.kerlink2lo;
 
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
-import com.orange.lo.sample.kerlink2lo.lo.ExternalConnectorService;
-
-import java.lang.invoke.MethodHandles;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.Callable;
-
-import javax.servlet.http.HttpServletRequest;
-
+import com.orange.lo.sample.kerlink2lo.lo.LoApiExternalConnectorService;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
+
+import javax.servlet.http.HttpServletRequest;
+import java.lang.invoke.MethodHandles;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Callable;
 
 @RestController
 public class Kerlink2LoController {
@@ -37,9 +31,9 @@ public class Kerlink2LoController {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String KERLINK_ACCOUNT_HEADER = "Kerlink-Account";
 
-    private ExternalConnectorService externalConnectorService;
+    private final LoApiExternalConnectorService externalConnectorService;
 
-    public Kerlink2LoController(ExternalConnectorService externalConnectorService) {
+    public Kerlink2LoController(LoApiExternalConnectorService externalConnectorService) {
         this.externalConnectorService = externalConnectorService;
     }
 
@@ -56,6 +50,7 @@ public class Kerlink2LoController {
                 externalConnectorService.sendMessage(dataUpDto, kerlinkAccountName.get());
                 return ResponseEntity.ok().build();
             } else {
+                LOG.debug("Unknown KerlinkAccountName {}", StringEscapeUtils.escapeHtml4(kerlinkAccountName.orElse("")));
                 return ResponseEntity.notFound().build();
             }
         };
@@ -69,10 +64,8 @@ public class Kerlink2LoController {
         return () -> {
             if ("OK".equals(dataDownEventDto.getStatus())) {
                 externalConnectorService.sendCommandResponse(dataDownEventDto);
-                return ResponseEntity.ok().build();
-            } else {
-                return ResponseEntity.ok().build();
             }
+            return ResponseEntity.ok().build();
         };
     }
 

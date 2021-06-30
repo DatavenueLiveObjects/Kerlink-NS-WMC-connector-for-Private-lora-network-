@@ -1,21 +1,21 @@
 package com.orange.lo.sample.kerlink2lo;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
+import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkApi;
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkProperties;
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
-import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkApi;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.EndDeviceDto;
-import com.orange.lo.sample.kerlink2lo.lo.ExternalConnectorService;
-import com.orange.lo.sample.kerlink2lo.lo.model.LoDevice;
+import com.orange.lo.sample.kerlink2lo.lo.LoApiExternalConnectorService;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceCache;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceProvider;
 import com.orange.lo.sample.kerlink2lo.lo.LoProperties;
+import com.orange.lo.sdk.rest.model.Device;
+import org.assertj.core.util.Lists;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,12 +25,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.assertj.core.util.Lists;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class IotDeviceManagementTest {
@@ -46,9 +43,10 @@ public class IotDeviceManagementTest {
     private LoDeviceProvider loDeviceProvider;
 
     @Mock
-    private ExternalConnectorService externalConnectorService;
+    private LoApiExternalConnectorService externalConnectorService;
 
     private LoDeviceCache loDeviceCache;
+    @Autowired
     private LoProperties loProperties;
     private IotDeviceManagement iotDeviceManagement;
     private Map<String, KerlinkApi> kerlinkApiMap;
@@ -57,23 +55,20 @@ public class IotDeviceManagementTest {
     @Before
     public void setUp() {
         loDeviceCache = new LoDeviceCache();
-        loProperties = new LoProperties();
-        kerlinkApiMap = new HashMap<String, KerlinkApi>();
+        kerlinkApiMap = new HashMap<>();
         kerlinkApiMap.put(KER_ACCOUNT, kerlinkApi);
 
         KerlinkProperties kerlinkProperties = new KerlinkProperties();
         kerlinkProperties.setKerlinkAccountName(KER_ACCOUNT);
-        kerlinkPropertiesList = new KerlinkPropertiesList();
-        kerlinkPropertiesList.setKerlinkList(Lists.list(kerlinkProperties));
-        iotDeviceManagement = new IotDeviceManagement(kerlinkApiMap, loDeviceProvider, externalConnectorService, loProperties, kerlinkPropertiesList, loDeviceCache);
+        kerlinkPropertiesList = new KerlinkPropertiesList(Lists.list(kerlinkProperties));
+        iotDeviceManagement = new IotDeviceManagement(kerlinkApiMap, loDeviceProvider, externalConnectorService, kerlinkPropertiesList, loDeviceCache);
     }
 
     @Test
     public void shouldDoNothingWhenDevicesAreEqual() throws InterruptedException {
         // given
-        loProperties.setDevicePrefix(LO_DEVICE_PREFIX);
         List<EndDeviceDto> kerlinkDevicesList = getKerlinkDevicesList(3);
-        List<LoDevice> loDevicesList = getLoDevicecsList(3);
+        List<Device> loDevicesList = getLoDevicesList(3);
 
         when(kerlinkApi.getEndDevices()).thenReturn(kerlinkDevicesList);
         when(loDeviceProvider.getDevices(GROUP_NAME)).thenReturn(loDevicesList);
@@ -89,12 +84,8 @@ public class IotDeviceManagementTest {
 
     @Test
     public void shouldCreateNewDevices() throws InterruptedException {
-        // given
-        loProperties.setDevicePrefix(LO_DEVICE_PREFIX);
-        loProperties.setSynchronizationThreadPoolSize(10);
-
         List<EndDeviceDto> kerlinkDevicesList = getKerlinkDevicesList(6);
-        List<LoDevice> loDevicesList = getLoDevicecsList(4);
+        List<Device> loDevicesList = getLoDevicesList(4);
 
         when(kerlinkApi.getEndDevices()).thenReturn(kerlinkDevicesList);
         when(loDeviceProvider.getDevices(GROUP_NAME)).thenReturn(loDevicesList);
@@ -117,12 +108,8 @@ public class IotDeviceManagementTest {
 
     @Test
     public void shouldDeleteOldDevices() throws InterruptedException {
-        // given
-        loProperties.setDevicePrefix(LO_DEVICE_PREFIX);
-        loProperties.setSynchronizationThreadPoolSize(10);
-
         List<EndDeviceDto> kerlinkDevicesList = getKerlinkDevicesList(5);
-        List<LoDevice> loDevicesList = getLoDevicecsList(8);
+        List<Device> loDevicesList = getLoDevicesList(8);
 
         when(kerlinkApi.getEndDevices()).thenReturn(kerlinkDevicesList);
         when(loDeviceProvider.getDevices(GROUP_NAME)).thenReturn(loDevicesList);
@@ -143,11 +130,9 @@ public class IotDeviceManagementTest {
         verify(externalConnectorService, times(3)).deleteDevice(any());
     }
 
-    private List<LoDevice> getLoDevicecsList(int amount) {
+    private List<Device> getLoDevicesList(int amount) {
         return IntStream.rangeClosed(1, amount).mapToObj(i -> {
-            LoDevice loDevice = new LoDevice();
-            loDevice.setId(LO_DEVICE_PREFIX + i);
-            return loDevice;
+            return new Device().withId(LO_DEVICE_PREFIX + i);
         }).collect(Collectors.toList());
     }
 

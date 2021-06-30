@@ -11,9 +11,7 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static com.orange.lo.sample.kerlink2lo.archunit.rules.CodingRules.avoidDirectlyInstantiatingManagedBeans;
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.constructors;
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
 @RunWith(ArchUnitRunner.class)
 @AnalyzeClasses(

@@ -1,152 +1,85 @@
-/** 
-* Copyright (c) Orange. All Rights Reserved.
-* 
-* This source code is licensed under the MIT license found in the 
-* LICENSE file in the root directory of this source tree. 
-*/
+/*
+ * Copyright (c) Orange. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 
 package com.orange.lo.sample.kerlink2lo.lo;
 
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkProperties;
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkPropertiesList;
-
-import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-
-import com.orange.lo.sample.kerlink2lo.lo.model.LoDevice;
-import com.orange.lo.sample.kerlink2lo.lo.model.LoGroup;
+import com.orange.lo.sdk.rest.devicemanagement.DeviceManagement;
+import com.orange.lo.sdk.rest.devicemanagement.GetDevicesFilter;
+import com.orange.lo.sdk.rest.devicemanagement.GetGroupsFilter;
+import com.orange.lo.sdk.rest.devicemanagement.Inventory;
+import com.orange.lo.sdk.rest.model.*;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.Policy;
+import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
+
+import javax.annotation.PostConstruct;
+import java.lang.invoke.MethodHandles;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.orange.lo.sdk.rest.devicemanagement.Groups.DEFAULT_GROUP_ID;
 
 @Component
 public class LoDeviceProvider {
+    public static final String X_CONNECTOR = "x-connector";
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final String ID_PADDING = "urn:lo:nsid:x-connector:";
+    private final Integer pageSize;
+    private final Policy<Device> deviceRetryPolicy;
+    private final Policy<List<Device>> deviceListRetryPolicy;
+    private final RetryPolicy<Group> groupRetryPolicy;
+    private final RetryPolicy<List<Group>> groupListRetryPolicy;
+    private final DeviceManagement deviceManagement;
+    private final LoDeviceCache deviceCache;
+    private final GroupCache groupCache;
+    private final Set<String> kerlinkAccountNames;
 
-    private RestTemplate restTemplate;
-    private LoProperties loProperties;
-    private KerlinkPropertiesList kerlinkPropertiesList;
-    private HttpHeaders authenticationHeaders;
-    private HttpEntity<Void> authenticationEntity;
-    private Map<String, String> loGroupsMap;
+    public LoDeviceProvider(LoProperties loProperties,
+                            DeviceManagement deviceManagement,
+                            LoDeviceCache deviceCache,
+                            GroupCache groupCache, KerlinkPropertiesList kerlinkPropertiesList) {
+        this.deviceManagement = deviceManagement;
+        this.deviceCache = deviceCache;
 
-    private final String devicesPagedUrlTemplate;
-    private final String groupsPagedUrlTemplate;
-
-    private static final String X_TOTAL_COUNT_HEADER = "X-Total-Count";
-    private static final String X_RATELIMIT_REMAINING_HEADER = "X-Ratelimit-Remaining";
-    private static final String X_RATELIMIT_RESET_HEADER = "X-Ratelimit-Reset";
-
-    private static final String DEVICES_ENDPOINT = "/v1/deviceMgt/devices";
-    private static final String GROOUPS_ENDPOINT = "/v1/deviceMgt/groups";
-
-    public LoDeviceProvider(LoProperties loProperties, KerlinkPropertiesList kerlinkPropertiesList, HttpHeaders authenticationHeaders, @Qualifier("loRestTemplate") RestTemplate restTemplate) {
-        this.loProperties = loProperties;
-        this.kerlinkPropertiesList = kerlinkPropertiesList;
-        this.authenticationHeaders = authenticationHeaders;
-        this.restTemplate = restTemplate;
-
-        this.loGroupsMap = new HashMap<>();
-        this.authenticationEntity = new HttpEntity<>(authenticationHeaders);
-        this.devicesPagedUrlTemplate = loProperties.getApiUrl() + DEVICES_ENDPOINT + "?limit=" + loProperties.getPageSize() + "&offset=%d&groupId=%s&fields=id,name,group";
-        this.groupsPagedUrlTemplate = loProperties.getApiUrl() + GROOUPS_ENDPOINT + "?limit=" + loProperties.getPageSize() + "&offset=" + "%d";
+        this.pageSize = loProperties.getPageSize();
+        this.groupCache = groupCache;
+        this.deviceRetryPolicy = new RetryPolicy<>();
+        this.deviceListRetryPolicy = new RetryPolicy<>();
+        this.groupRetryPolicy = new RetryPolicy<>();
+        this.groupListRetryPolicy = new RetryPolicy<>();
+        this.kerlinkAccountNames = kerlinkPropertiesList.getKerlinkList()
+                .stream()
+                .map(KerlinkProperties::getKerlinkAccountName)
+                .collect(Collectors.toSet());
     }
 
-    @PostConstruct
-    public void postConstruct() {
-
-        LOG.info("Managing group of devices");
-        try {
-            synchronizeGroups();
-        } catch (HttpClientErrorException e) {
-            LOG.error("Cannot create group \n {}", e.getResponseBodyAsString());
-            System.exit(1);
-        } catch (Exception e) {
-            LOG.error("Unexpected error while managing group {}", e.getMessage());
-            System.exit(1);
-        }
-    }
-
-    private void synchronizeGroups() {
-        ArrayList<LoGroup> emptyList = new ArrayList<>();
-        Set<String> kerlinkAccountNames = kerlinkPropertiesList.getKerlinkList().stream().map(KerlinkProperties::getKerlinkAccountName).collect(Collectors.toSet());
-        LOG.debug("Trying to get existing groups");
-
-        int retrievedGroups = 0;
-        for (int offset = 0;; offset++) {
-            try {
-                ResponseEntity<LoGroup[]> response = restTemplate.exchange(getPagedGroupsUrl(offset), HttpMethod.GET, authenticationEntity, LoGroup[].class);
-                List<LoGroup> loGroups = Optional.ofNullable(response.getBody())
-                        .map(Arrays::asList)
-                        .orElse(emptyList);
-
-                retrievedGroups += loGroups.size();
-                loGroups.forEach(g -> loGroupsMap.put(g.getPathNode(), g.getId()));
-
-                if (loGroups.isEmpty() || retrievedGroups >= getTotalCount(response)) {
-                    break;
-                }
-            } catch (HttpClientErrorException e) {
-                LOG.error("Cannot retrieve information about groups \n {}", e.getResponseBodyAsString());
-                System.exit(1);
-            }
-        }
-
-        kerlinkAccountNames.forEach(accountName -> {
-            if (!loGroupsMap.containsKey(accountName)) {
-                LOG.debug("Group {} not found, trying to create new group", accountName);
-                LoGroup group = new LoGroup(null, accountName);
-                HttpEntity<LoGroup> httpEntity = new HttpEntity<>(group, authenticationHeaders);
-                ResponseEntity<LoGroup> response = restTemplate.exchange(loProperties.getApiUrl() + GROOUPS_ENDPOINT, HttpMethod.POST, httpEntity, LoGroup.class);
-                loGroupsMap.put(accountName, response.getBody().getId());
-                LOG.debug("Group {} created", accountName);
-            }
-        });
-        LOG.debug("kerlinkAccountNames: {}", kerlinkAccountNames);
-        LOG.debug("existing groups: {}", loGroupsMap);
-    }
-
-    public List<LoDevice> getDevices(String groupName) {
-        List<LoDevice> devices = new ArrayList<>(loProperties.getPageSize());
-        ArrayList<LoDevice> emptyList = new ArrayList<>();
-
-        for (int offset = 0;; offset++) {
-            LOG.trace("Calling LO url {}", getPagedDevicesUrl(offset, loGroupsMap.get(groupName)));
-            ResponseEntity<LoDevice[]> response = restTemplate.exchange(getPagedDevicesUrl(offset, loGroupsMap.get(groupName)), HttpMethod.GET, authenticationEntity, LoDevice[].class);
-            List<LoDevice> loDevices = Optional.ofNullable(response.getBody())
-                    .map(Arrays::asList)
-                    .orElse(emptyList);
-
+    public List<Device> getDevices(String groupName) {
+        List<Device> devices = new ArrayList<>(pageSize);
+        Inventory inventory = deviceManagement.getInventory();
+        Group group = groupCache.get(groupName);
+        String groupIdOrDefault = group != null ? group.getId() : DEFAULT_GROUP_ID;
+        for (int offset = 0; ; offset++) {
+            GetDevicesFilter devicesFilter = new GetDevicesFilter()
+                    .withGroupId(groupIdOrDefault)
+                    .withLimit(pageSize)
+                    .withOffset(offset * pageSize);
+            List<Device> loDevices = Failsafe.with(deviceListRetryPolicy)
+                    .get(() -> inventory.getDevices(devicesFilter));
             LOG.trace("Got {} devices", loDevices.size());
             devices.addAll(loDevices);
-            if (loDevices.isEmpty() || devices.size() >= getTotalCount(response)) {
+            if (loDevices.size() < pageSize) {
                 break;
-            }
-            if (Integer.parseInt(getHeaderValue(response, X_RATELIMIT_REMAINING_HEADER)) == 0) {
-                long reset = Long.parseLong(getHeaderValue(response, X_RATELIMIT_RESET_HEADER));
-                long current = System.currentTimeMillis();
-                try {
-                    Thread.sleep(reset - current);
-                } catch (Exception e) {
-                    LOG.error("Exception while getting devices: {}", e.getMessage());
-                }
             }
         }
         LOG.trace("Devices: {}", devices);
@@ -160,34 +93,102 @@ public class LoDeviceProvider {
             LOG.trace("Trying to add device {} to LO group {}", cleanDeviceId, clearAccountName);
         }
 
-        LoDevice device = new LoDevice(deviceId, loGroupsMap.get(kerlinkAccountName), loProperties.getDevicePrefix(), true);
-        HttpEntity<LoDevice> httpEntity = new HttpEntity<>(device, authenticationHeaders);
+        Group group = groupCache.get(kerlinkAccountName);
+        Device device = buildDevice(deviceId, group);
+        Device added = Failsafe.with(deviceRetryPolicy)
+                .get(() ->
+                        deviceManagement
+                                .getInventory()
+                                .createDevice(device)
+                );
 
-        restTemplate.exchange(loProperties.getApiUrl() + DEVICES_ENDPOINT, HttpMethod.POST, httpEntity, Void.class);
+        LOG.debug("Added device: {}", added);
+        deviceCache.add(deviceId, kerlinkAccountName);
+    }
+
+    private Device buildDevice(String deviceId, Group group) {
+        InterfaceCapability interfaceCapability = new InterfaceCapability()
+                .withAvailable(true);
+        Capabilities capabilities = new Capabilities()
+                .withCommand(interfaceCapability);
+        Definition definition = new Definition()
+                .withClientId(deviceId);
+        Interface anInterface = new Interface()
+                .withConnector(X_CONNECTOR)
+                .withDefinition(definition)
+                .withCapabilities(capabilities);
+        return new Device()
+                .withGroup(group)
+                .withId(ID_PADDING + deviceId)
+                .withName(deviceId)
+                .withInterfaces(Collections.singletonList(anInterface));
     }
 
     public void deleteDevice(String deviceId) {
         if (LOG.isTraceEnabled()) {
             LOG.trace("Trying to delete device {} from LO", StringEscapeUtils.escapeHtml4(deviceId));
         }
-        restTemplate.exchange(loProperties.getApiUrl() + DEVICES_ENDPOINT + "/" + deviceId, HttpMethod.DELETE, authenticationEntity, Void.class);
+        Failsafe.with(deviceRetryPolicy)
+                .run(() ->
+                        deviceManagement
+                                .getInventory()
+                                .deleteDevice(deviceId)
+                );
+        deviceCache.delete(deviceId);
     }
 
-    private String getPagedDevicesUrl(int offset, String groupName) {
-        return String.format(devicesPagedUrlTemplate, offset * loProperties.getPageSize(), groupName);
+    @PostConstruct
+    public void postConstruct() {
+        LOG.info("Managing group of devices");
+        try {
+            synchronizeGroups();
+        } catch (HttpClientErrorException e) {
+            LOG.error("Cannot create group \n {}", e.getResponseBodyAsString());
+            System.exit(1);
+        } catch (Exception e) {
+            LOG.error("Unexpected error while managing group {}", e.getMessage());
+            System.exit(1);
+        }
     }
 
-    private String getPagedGroupsUrl(int offset) {
-        return String.format(groupsPagedUrlTemplate, offset * loProperties.getPageSize());
+    private void synchronizeGroups() {
+        LOG.debug("Trying to get existing groups");
+
+        Map<String, Group> allGroups = retrieveGroups();
+        groupCache.putAll(allGroups);
+
+        kerlinkAccountNames.forEach(accountName -> {
+            if (!allGroups.containsKey(accountName)) {
+                LOG.debug("Group {} not found, trying to create new group", accountName);
+                Group group = Failsafe.with(this.groupRetryPolicy)
+                        .get(() -> this.deviceManagement
+                                .getGroups()
+                                .createGroup(accountName)
+                        );
+                this.groupCache.put(accountName, group);
+                LOG.debug("Group {} created", accountName);
+            }
+        });
+        LOG.debug("kerlinkAccountNames: {}", this.kerlinkAccountNames);
+        LOG.debug("existing groups: {}", this.groupCache);
     }
 
-    private static int getTotalCount(ResponseEntity<?> response) {
-        String headerValue = getHeaderValue(response, X_TOTAL_COUNT_HEADER);
-        return Integer.parseInt(headerValue);
+    public Map<String, Group> retrieveGroups() {
+        Map<String, Group> allGroups = new HashMap<>();
+        for (int offset = 0; ; offset++) {
+            GetGroupsFilter getGroupsFilter = new GetGroupsFilter()
+                    .withLimit(this.pageSize)
+                    .withOffset(offset * this.pageSize);
+            List<Group> groupSubset = Failsafe.with(this.groupListRetryPolicy)
+                    .get(() -> this.deviceManagement.getGroups().getGroups(getGroupsFilter));
+            groupSubset.forEach(g -> allGroups.put(g.getPathNode(), g));
+
+            if (groupSubset.size() < this.pageSize) {
+                break;
+            }
+        }
+
+        return allGroups;
     }
 
-    private static String getHeaderValue(ResponseEntity<?> response, String headerName) {
-        List<String> strings = response.getHeaders().get(headerName);
-        return strings != null && !strings.isEmpty() ? strings.get(0) : null;
-    }
 }

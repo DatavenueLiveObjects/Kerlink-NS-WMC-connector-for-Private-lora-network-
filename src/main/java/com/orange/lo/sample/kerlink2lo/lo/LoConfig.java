@@ -1,38 +1,64 @@
-/** 
-* Copyright (c) Orange. All Rights Reserved.
-* 
-* This source code is licensed under the MIT license found in the 
-* LICENSE file in the root directory of this source tree. 
-*/
+/*
+ * Copyright (c) Orange. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 
 package com.orange.lo.sample.kerlink2lo.lo;
 
+import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkApi;
+import com.orange.lo.sdk.LOApiClient;
+import com.orange.lo.sdk.LOApiClientParameters;
+import com.orange.lo.sdk.externalconnector.DataManagementExtConnector;
+import com.orange.lo.sdk.externalconnector.DataManagementExtConnectorCommandCallback;
+import com.orange.lo.sdk.rest.devicemanagement.DeviceManagement;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
 
 @Configuration
+@ConfigurationPropertiesScan
 public class LoConfig {
 
-    private LoProperties loProperties;
-
-    public LoConfig(LoProperties loProperties) {
-        this.loProperties = loProperties;
+    @Bean
+    public LOApiClientParameters loApiClientParameters(LoProperties loProperties, DataManagementExtConnectorCommandCallback dataManagementExtConnectorCommandCallback) {
+        return LOApiClientParameters.builder()
+                .apiKey(loProperties.getApiKey())
+                .connectionTimeout(loProperties.getConnectionTimeout())
+                .automaticReconnect(loProperties.getAutomaticReconnect())
+                .hostname(loProperties.getHostname())
+                .messageQos(loProperties.getMessageQos())
+                .keepAliveIntervalSeconds(loProperties.getKeepAliveIntervalSeconds())
+                .mqttPersistenceDataDir(loProperties.getMqttPersistenceDir())
+                .dataManagementExtConnectorCommandCallback(dataManagementExtConnectorCommandCallback)
+                .build();
     }
 
     @Bean
-    public HttpHeaders authenticationHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Content-Type", "application/json");
-        headers.set("X-API-KEY", loProperties.getApiKey());
-        headers.set("X-Total-Count", "true");
-        return headers;
+    public LOApiClient loApiclient(LOApiClientParameters parameters) {
+        return new LOApiClient(parameters);
     }
-    
-    @Bean(name = "loRestTemplate")
-    public RestTemplate restTemplate() {
-        return new RestTemplate(new HttpComponentsClientHttpRequestFactory());
+
+    @Bean
+    public MessageListener messageListener(CommandMapper commandMapper, Map<String, KerlinkApi> kerlinkApiMap, LoDeviceCache deviceCache) {
+        return new MessageListener(commandMapper, kerlinkApiMap, deviceCache);
+    }
+
+    @Bean
+    public DeviceManagement deviceManagement(LOApiClient loApiClient) {
+        return loApiClient.getDeviceManagement();
+    }
+
+    @Bean
+    public DataManagementExtConnector externalConnector(LOApiClient loApiClient) {
+        return loApiClient.getDataManagementExtConnector();
+    }
+
+    @Bean
+    public GroupCache groupCache() {
+        return new GroupCache();
     }
 }
