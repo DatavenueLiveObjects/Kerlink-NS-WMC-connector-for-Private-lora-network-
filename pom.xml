@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.orange.lo.sample</groupId>
 	<artifactId>kerlink2lo</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<name>kerlink2lo</name>
 	<description>Connector between kerlink and live object</description>
 
@@ -77,6 +77,28 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5.3</version>
+				<configuration>
+					<scmCommentPrefix>[ci skip]</scmCommentPrefix>
+					<tagNameFormat>v@{project.version}</tagNameFormat>
+					<arguments>-Prelease</arguments>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<scm>
+		<url>https://github.com/DatavenueLiveObjects/Kerlink-NS-WMC-connector-for-Private-lora-network-.git</url>
+		<connection>scm:git:${project.scm.url}</connection>
+		<developerConnection>scm:git:${project.scm.url}</developerConnection>
+		<tag>v1.0</tag>
+	</scm>
 
 	<profiles>
 		<profile>
