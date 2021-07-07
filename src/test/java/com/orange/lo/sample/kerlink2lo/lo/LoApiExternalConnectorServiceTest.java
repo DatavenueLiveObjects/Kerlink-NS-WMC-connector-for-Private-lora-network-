@@ -17,8 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -100,13 +99,14 @@ class LoApiExternalConnectorServiceTest {
     }
 
     @Test
-    void createDeviceDoesntSendStatusUpdateIfCreateFails() {
-        loApiExternalConnectorService.createDevice(KERLINK_DEVICE_ID, KERLINK_ACCOUNT_NAME);
+    void createDeviceThrowsBeforeSendStatusOnFailure() {
         doThrow(RestClientException.class).when(loDeviceProvider).addDevice(anyString(), anyString());
 
-        loApiExternalConnectorService.createDevice(KERLINK_DEVICE_ID, KERLINK_ACCOUNT_NAME);
+        assertThrows(Exception.class, () ->
+                loApiExternalConnectorService.createDevice(KERLINK_DEVICE_ID, KERLINK_ACCOUNT_NAME));
 
         verify(dataManagementExtConnector, times(0)).sendStatus(anyString(), any());
+
     }
 
     @Test

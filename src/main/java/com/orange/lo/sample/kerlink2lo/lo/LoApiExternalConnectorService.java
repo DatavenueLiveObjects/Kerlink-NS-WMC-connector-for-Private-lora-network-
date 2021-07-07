@@ -13,6 +13,9 @@ import com.orange.lo.sdk.externalconnector.DataManagementExtConnector;
 import com.orange.lo.sdk.externalconnector.model.*;
 import com.orange.lo.sdk.externalconnector.model.NodeStatus.Capabilities;
 import com.orange.lo.sdk.externalconnector.model.NodeStatus.Command;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.Policy;
+import net.jodah.failsafe.RetryPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -29,6 +32,7 @@ public class LoApiExternalConnectorService {
     private final DataManagementExtConnector loApiDataManagementExtConnector;
     private final LoDeviceProvider loDeviceProvider;
     private final LoProperties loProperties;
+    private Policy<Void> statusRetryPolicy;
 
     public LoApiExternalConnectorService(ExternalConnectorCommandResponseWrapper externalConnectorCommandResponseWrapper,
                                          LoDeviceCache deviceCache,
@@ -40,6 +44,7 @@ public class LoApiExternalConnectorService {
         this.loApiDataManagementExtConnector = dataManagementExtConnector;
         this.loDeviceProvider = loDeviceProvider;
         this.loProperties = loProperties;
+        this.statusRetryPolicy = new RetryPolicy<>();
     }
 
     @PostConstruct
@@ -79,7 +84,10 @@ public class LoApiExternalConnectorService {
         Capabilities capabilities = new Capabilities();
         capabilities.setCommand(new Command(true));
         nodeStatus.setCapabilities(capabilities);
-        loApiDataManagementExtConnector.sendStatus(kerlinkDeviceId, nodeStatus);
+        Failsafe.with(statusRetryPolicy)
+                .run(() ->
+                        loApiDataManagementExtConnector.sendStatus(kerlinkDeviceId, nodeStatus)
+                );
     }
 
     public void deleteDevice(String loDeviceId) {
