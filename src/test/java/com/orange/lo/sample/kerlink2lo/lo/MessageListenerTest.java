@@ -47,7 +47,7 @@ class MessageListenerTest {
     }
 
     @Test
-    void onCommandRequest_calls_send_command() {
+    void sendCommandIsCalled() {
         CommandRequest commandRequest = prepareCommandRequest();
 
         messageListener.onCommandRequest(commandRequest);
@@ -56,7 +56,7 @@ class MessageListenerTest {
     }
 
     @Test
-    void onCommandRequest_returns_null() {
+    void returnIsNull() {
         CommandRequest commandRequest = prepareCommandRequest();
 
         Object returnVal = messageListener.onCommandRequest(commandRequest);
@@ -65,7 +65,7 @@ class MessageListenerTest {
     }
 
     @Test
-    void onCommandRequest_adds_command_id_to_mapper() {
+    void commandIdsAreAdded() {
         when(kerlinkApi.sendCommand(any())).thenReturn(Optional.of(COMMAND_ID));
         CommandRequest commandRequest = prepareCommandRequest();
 

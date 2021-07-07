@@ -7,7 +7,6 @@ import com.orange.lo.sample.kerlink2lo.kerlink.model.EndDeviceDto;
 import com.orange.lo.sample.kerlink2lo.lo.LoApiExternalConnectorService;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceCache;
 import com.orange.lo.sample.kerlink2lo.lo.LoDeviceProvider;
-import com.orange.lo.sample.kerlink2lo.lo.LoProperties;
 import com.orange.lo.sdk.rest.model.Device;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
@@ -15,7 +14,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
 import java.util.List;
@@ -46,8 +44,6 @@ public class IotDeviceManagementTest {
     private LoApiExternalConnectorService externalConnectorService;
 
     private LoDeviceCache loDeviceCache;
-    @Autowired
-    private LoProperties loProperties;
     private IotDeviceManagement iotDeviceManagement;
     private Map<String, KerlinkApi> kerlinkApiMap;
     private KerlinkPropertiesList kerlinkPropertiesList;
@@ -65,7 +61,7 @@ public class IotDeviceManagementTest {
     }
 
     @Test
-    public void shouldDoNothingWhenDevicesAreEqual() throws InterruptedException {
+    public void shouldDoNothingWhenDevicesAreEqual() {
         // given
         List<EndDeviceDto> kerlinkDevicesList = getKerlinkDevicesList(3);
         List<Device> loDevicesList = getLoDevicesList(3);
@@ -131,9 +127,9 @@ public class IotDeviceManagementTest {
     }
 
     private List<Device> getLoDevicesList(int amount) {
-        return IntStream.rangeClosed(1, amount).mapToObj(i -> {
-            return new Device().withId(LO_DEVICE_PREFIX + i);
-        }).collect(Collectors.toList());
+        return IntStream.rangeClosed(1, amount)
+                .mapToObj(i -> new Device().withId(LO_DEVICE_PREFIX + i))
+                .collect(Collectors.toList());
     }
 
     private List<EndDeviceDto> getKerlinkDevicesList(int amount) {
