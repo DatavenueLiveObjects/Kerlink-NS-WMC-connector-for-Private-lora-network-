@@ -3,6 +3,7 @@ package com.orange.lo.sample.kerlink2lo.lo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
+import com.orange.lo.sample.kerlink2lo.lo.CommandMapper.LoCommand;
 import com.orange.lo.sdk.externalconnector.DataManagementExtConnector;
 import com.orange.lo.sdk.externalconnector.model.DataMessage;
 import com.orange.lo.sdk.externalconnector.model.Value;
@@ -16,6 +17,7 @@ import org.springframework.web.client.RestClientException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,25 +28,27 @@ class LoApiExternalConnectorServiceTest {
     public static final String EXPECTED_DECODED_PAYLOAD = "15;25";
     public static final String KERLINK_ACCOUNT_NAME = "acc";
     private static final String KERLINK_DEVICE_ID = "deviceId";
+    private static final String NODE_ID = "node";
+    private static final String COMMAND_ID = "command";
     private DataManagementExtConnector dataManagementExtConnector;
     private LoApiExternalConnectorService loApiExternalConnectorService;
-    private ExternalConnectorCommandResponseWrapper externalConnectorCommandResponseWrapper;
     private LoDeviceProvider loDeviceProvider;
+    private CommandMapper commandMapper;
 
     @BeforeEach
     private void setUp() {
-        externalConnectorCommandResponseWrapper = Mockito.mock(ExternalConnectorCommandResponseWrapper.class);
         dataManagementExtConnector = Mockito.mock(DataManagementExtConnector.class);
         loDeviceProvider = Mockito.mock(LoDeviceProvider.class);
         LoDeviceCache deviceCache
                 = Mockito.mock(LoDeviceCache.class);
         LoProperties loProperties = Mockito.mock(LoProperties.class);
+        commandMapper = Mockito.mock(CommandMapper.class);
         loApiExternalConnectorService = new LoApiExternalConnectorService(
-                externalConnectorCommandResponseWrapper,
                 deviceCache,
                 loDeviceProvider,
                 dataManagementExtConnector,
-                loProperties);
+                loProperties,
+                commandMapper );
     }
 
     @Test
@@ -67,12 +71,15 @@ class LoApiExternalConnectorServiceTest {
     }
 
     @Test
-    void sendCommandResponseCallsWrapperSendCommandResponse() {
-        DataDownEventDto dataDownEventDto = Mockito.mock(DataDownEventDto.class);
+    void sendCommandResponseCallsApiSendCommandResponse() throws IOException {
+        DataDownEventDto dataDownEventDto = buildExampleDataDownEventDto();
+        LoCommand loCommand = commandMapper.new LoCommand(COMMAND_ID, NODE_ID);
+        Optional<LoCommand> optionalLoCommand = Optional.of(loCommand);
+        doReturn(optionalLoCommand).when(commandMapper).get(anyString());
 
         loApiExternalConnectorService.sendCommandResponse(dataDownEventDto);
 
-        Mockito.verify(externalConnectorCommandResponseWrapper, atLeastOnce()).sendCommandResponse(any());
+        Mockito.verify(dataManagementExtConnector, times(1)).sendCommandResponse(any());
     }
 
     @Test
@@ -122,5 +129,13 @@ class LoApiExternalConnectorServiceTest {
         File jsonFile = new File(fileUrl.getFile());
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.readValue(jsonFile, DataUpDto.class);
+    }
+
+    private DataDownEventDto buildExampleDataDownEventDto() throws IOException {
+        URL fileUrl = getClass().getResource("/dataDownEventDtoExample.json");
+        assert fileUrl != null;
+        File jsonFile = new File(fileUrl.getFile());
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(jsonFile, DataDownEventDto.class);
     }
 }

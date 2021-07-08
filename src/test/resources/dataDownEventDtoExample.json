@@ -1,0 +1,8 @@
+{
+  "dataDownId": "dataDownId",
+  "event": "evt",
+  "status": "OK",
+  "clusterId": 1,
+  "nbAttempts": 0,
+  "multicast": false
+}
