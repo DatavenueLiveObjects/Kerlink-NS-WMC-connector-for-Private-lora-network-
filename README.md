@@ -9,12 +9,12 @@ This repository contains everything you need to create 'Kerlink to Live Objects'
 
 Three main features are:
 * **devices synchronization** - every device created in Kerlink will appear in LO and every device deleted from Kerlink will be also deleted from LO
-* **messages synchronization** - every message which will be send from device to Kerlink will appear in LO
+* **messages synchronization** - every message which will be sent from device to Kerlink will appear in LO
 * **commands synchronization** - every command created in LO will be sent to Kerlink and status in LO will be updated
 
 One connector can handle many customers (many Kerlink accounts).  
 
-It can be only one instance of connector. Two or more instances connected to to the same Kerlink accounts will cause problems.
+It can be only one instance of connector. Two or more instances connected to the same Kerlink accounts will cause problems.
 
 ## Technologies
 * Java 8
@@ -23,8 +23,27 @@ It can be only one instance of connector. Two or more instances connected to to 
 * Apache Commons Text 1.9
 * Jodah Failsafe 2.4.0
 
+# Getting the installation package
+
+The installation package can be acquired in one of two ways:
+
+### Release
+
+It can be downloaded from https://github.com/DatavenueLiveObjects/Kerlink-NS-WMC-connector-for-Private-lora-network-/releases
+
+### Building
+
+```
+mvn clean package -Prelease
+```
+
+After running this command, the file  `kerlink2lo-[VERSION].zip` will be created in the target directory. This file should
+be placed where the connector will be started, and then unpacked. You can deploy this connector wherever you want (local
+server, cloud provider etc.). After running this command, the file  `kerlink2lo-[VERSION].zip` will be created in the target
+directory. This file should be placed where the connector will be started, and then unpacked.
+
 ## Configuration
-All configuration can be found in **application.yaml** file located in src/main/resources
+All configuration can be found in **application.yaml** file located in `src/main/resources` (in source distribution) or in `conf` (in release).
 
 ```
  1  server:
@@ -101,7 +120,7 @@ JWT token expiration period (typically 10 hours).
 
 
 #### Loging
-Logging configuration can be found in **logback.xml** file located in src/main/resources. You can find more information about how to configure your logs [here](http://logback.qos.ch/manual/configuration.html) 
+Logging configuration can be found in **logback.xml** file located in `src/main/resources` or in `conf`. You can find more information about how to configure your logs [here](http://logback.qos.ch/manual/configuration.html)
 
 #### Generate API keys
 Login to Orange Web Portal an go to Configuration -> API keys 
