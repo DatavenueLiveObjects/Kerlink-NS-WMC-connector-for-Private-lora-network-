@@ -16,6 +16,8 @@ import com.orange.lo.sdk.externalconnector.model.NodeStatus;
 import com.orange.lo.sdk.externalconnector.model.NodeStatus.Capabilities;
 import com.orange.lo.sdk.externalconnector.model.NodeStatus.Command;
 import com.orange.lo.sdk.externalconnector.model.Status;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -28,14 +30,16 @@ public class LoApiExternalConnectorService implements ExternalConnectorService {
     private final LoDeviceCache deviceCache;
     private final DataManagementExtConnector loApiDataManagementExtConnector;
     private final LoDeviceProvider loDeviceProvider;
-    private final PayloadDecoder payloadDecoder;
+    private final PayloadEncoder payloadEncoder;
+	private final LoProperties loProperties;
 
-    public LoApiExternalConnectorService(ExternalConnectorCommandResponseWrapper externalConnectorCommandResponseWrapper, LoDeviceCache deviceCache, LoDeviceProvider loDeviceProvider, PayloadDecoder payloadDecoder, DataManagementExtConnector dataManagementExtConnector) {
+    public LoApiExternalConnectorService(ExternalConnectorCommandResponseWrapper externalConnectorCommandResponseWrapper, LoDeviceCache deviceCache, LoDeviceProvider loDeviceProvider, PayloadEncoder payloadEncoder, DataManagementExtConnector dataManagementExtConnector, LoProperties loProperties) {
         this.externalConnectorCommandResponseWrapper = externalConnectorCommandResponseWrapper;
         this.deviceCache = deviceCache;
         this.loApiDataManagementExtConnector = dataManagementExtConnector;
         this.loDeviceProvider = loDeviceProvider;
-        this.payloadDecoder = payloadDecoder;
+        this.payloadEncoder = payloadEncoder;
+		this.loProperties = loProperties;
     }
 
     @PostConstruct
@@ -50,13 +54,14 @@ public class LoApiExternalConnectorService implements ExternalConnectorService {
             createDevice(deviceId, kerlinkAccountName);
         }
         DataMessage dataMessage = new DataMessage();
-        String decodedPayload = payloadDecoder.decode(dataUpDto.getPayload());
-        dataMessage.setValue(decodedPayload);
+        payloadEncoder.convert(dataUpDto);
+        dataMessage.setValue(dataUpDto);
 
-        Optional<String> metadataName = payloadDecoder.metadataName();
-        if (metadataName.isPresent()) {
-            dataMessage.setMetadata(new Metadata(metadataName.get()));
+        String messageDecoder = loProperties.getMessageDecoder();
+        if (!StringUtils.isEmpty(messageDecoder)) {
+            dataMessage.setMetadata(new Metadata(messageDecoder));            
         }
+        
         loApiDataManagementExtConnector.sendMessage(deviceId, dataMessage);
     }
 

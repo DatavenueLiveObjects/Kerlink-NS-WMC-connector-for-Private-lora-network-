@@ -14,6 +14,7 @@ lo:
   connection-timeout: 30000
   page-size: 20
   synchronization-device-interval: PT10M
+  message-decoder: _your_message_decoder_
 
 kerlink-list:
   -
