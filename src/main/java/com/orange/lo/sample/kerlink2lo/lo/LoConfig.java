@@ -7,17 +7,23 @@
 
 package com.orange.lo.sample.kerlink2lo.lo;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.util.Map;
+
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
 import com.orange.lo.sample.kerlink2lo.kerlink.KerlinkApi;
 import com.orange.lo.sdk.LOApiClient;
 import com.orange.lo.sdk.LOApiClientParameters;
 import com.orange.lo.sdk.externalconnector.DataManagementExtConnector;
 import com.orange.lo.sdk.externalconnector.DataManagementExtConnectorCommandCallback;
 import com.orange.lo.sdk.rest.devicemanagement.DeviceManagement;
-import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-import java.util.Map;
 
 @Configuration
 @ConfigurationPropertiesScan
@@ -34,6 +40,8 @@ public class LoConfig {
                 .keepAliveIntervalSeconds(loProperties.getKeepAliveIntervalSeconds())
                 .mqttPersistenceDataDir(loProperties.getMqttPersistenceDir())
                 .dataManagementExtConnectorCommandCallback(dataManagementExtConnectorCommandCallback)
+                .connectorType(loProperties.getConnectorType())
+                .connectorVersion(getConnectorVersion())
                 .build();
     }
 
@@ -60,5 +68,26 @@ public class LoConfig {
     @Bean
     public GroupCache groupCache() {
         return new GroupCache();
+    }
+    
+    private String getConnectorVersion() {
+    	MavenXpp3Reader reader = new MavenXpp3Reader();
+        Model model = null;
+        try {			
+	        if ((new File("pom.xml")).exists()) {
+	          model = reader.read(new FileReader("pom.xml"));
+	        } else {
+	          model = reader.read(
+	            new InputStreamReader(
+	            	LoConfig.class.getResourceAsStream(
+	                "/META-INF/maven/com.orange.lo.sample/kerlink2lo/pom.xml"
+	              )
+	            )
+	          );
+	        }
+	        return model.getVersion().replace(".", "_");
+        } catch (Exception e) {
+			return "";
+		}
     }
 }
