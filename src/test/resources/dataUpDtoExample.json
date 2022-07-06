@@ -8,8 +8,8 @@
   "confirmed": true,
   "adr": true,
   "endDevice": {
-    "devAddr": "2601298C",
-    "devEui": "0018B20000002345"
+    "devAddr": "12345",
+    "devEui": "54321"
   },
   "fCntDown": 5867,
   "encrypted": false,

@@ -9,42 +9,50 @@ package com.orange.lo.sample.kerlink2lo.lo;
 
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
+import com.orange.lo.sample.kerlink2lo.lo.CommandMapper.LoCommand;
 import com.orange.lo.sdk.externalconnector.DataManagementExtConnector;
 import com.orange.lo.sdk.externalconnector.model.*;
 import com.orange.lo.sdk.externalconnector.model.NodeStatus.Capabilities;
 import com.orange.lo.sdk.externalconnector.model.NodeStatus.Command;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.Policy;
+import net.jodah.failsafe.RetryPolicy;
+import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.lang.invoke.MethodHandles;
+import java.util.Optional;
 
 @Service
 public class LoApiExternalConnectorService {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private final ExternalConnectorCommandResponseWrapper externalConnectorCommandResponseWrapper;
     private final LoDeviceCache deviceCache;
-    private final DataManagementExtConnector loApiDataManagementExtConnector;
     private final LoDeviceProvider loDeviceProvider;
     private final LoProperties loProperties;
+    private final Policy<Void> statusRetryPolicy;
+    private final CommandMapper commandMapper;
+    private final DataManagementExtConnector dataManagementExtConnector;
 
-    public LoApiExternalConnectorService(ExternalConnectorCommandResponseWrapper externalConnectorCommandResponseWrapper,
-                                         LoDeviceCache deviceCache,
+    public LoApiExternalConnectorService(LoDeviceCache deviceCache,
                                          LoDeviceProvider loDeviceProvider,
                                          DataManagementExtConnector dataManagementExtConnector,
-                                         LoProperties loProperties) {
-        this.externalConnectorCommandResponseWrapper = externalConnectorCommandResponseWrapper;
+                                         LoProperties loProperties,
+                                         CommandMapper commandMapper) {
         this.deviceCache = deviceCache;
-        this.loApiDataManagementExtConnector = dataManagementExtConnector;
         this.loDeviceProvider = loDeviceProvider;
+        this.dataManagementExtConnector = dataManagementExtConnector;
         this.loProperties = loProperties;
+        this.commandMapper = commandMapper;
+        this.statusRetryPolicy = new RetryPolicy<>();
     }
 
     @PostConstruct
     public void connect() {
-        loApiDataManagementExtConnector.connect();
+        dataManagementExtConnector.connect();
     }
 
     public void sendMessage(DataUpDto dataUpDto, String kerlinkAccountName) {
@@ -64,11 +72,21 @@ public class LoApiExternalConnectorService {
         }
 
         LOG.debug("Sending message to device {} on account {}", deviceId, kerlinkAccountName);
-        loApiDataManagementExtConnector.sendMessage(deviceId, dataMessage);
+        dataManagementExtConnector.sendMessage(deviceId, dataMessage);
     }
 
     public void sendCommandResponse(DataDownEventDto dataDownEventDto) {
-        externalConnectorCommandResponseWrapper.sendCommandResponse(dataDownEventDto);
+        Optional<LoCommand> optionalLoCommand = commandMapper.get(dataDownEventDto.getDataDownId());
+
+        if (optionalLoCommand.isPresent()) {
+            LoCommand loCommand = optionalLoCommand.get();
+            LOG.trace("Sending command response for device {}", loCommand.getNodeId());
+            CommandResponse commandResponse = new CommandResponse(loCommand.getId(), loCommand.getNodeId());
+            dataManagementExtConnector.sendCommandResponse(commandResponse);
+        } else if (LOG.isDebugEnabled()) {
+            String cleanDtoString = StringEscapeUtils.escapeJava(dataDownEventDto.toString());
+            LOG.debug("Received unknown command status from Kerlink: {}", cleanDtoString);
+        }
     }
 
     public void createDevice(String kerlinkDeviceId, String kerlinkAccountName) {
@@ -79,7 +97,10 @@ public class LoApiExternalConnectorService {
         Capabilities capabilities = new Capabilities();
         capabilities.setCommand(new Command(true));
         nodeStatus.setCapabilities(capabilities);
-        loApiDataManagementExtConnector.sendStatus(kerlinkDeviceId, nodeStatus);
+        Failsafe.with(statusRetryPolicy)
+                .run(() ->
+                        dataManagementExtConnector.sendStatus(kerlinkDeviceId, nodeStatus)
+                );
     }
 
     public void deleteDevice(String loDeviceId) {

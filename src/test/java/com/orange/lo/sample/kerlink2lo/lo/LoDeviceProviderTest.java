@@ -37,7 +37,7 @@ class LoDeviceProviderTest {
     }
 
     @Test
-    void retrieveGroups() {
+    void groupsAreRetrievedCorrectly() {
         RestTemplateFactory restTemplateFactory = Mockito.mock(RestTemplateFactory.class);
         when(restTemplateFactory.getRestTemplate()).thenReturn(new RestTemplate());
         Groups groups = Mockito.mock(Groups.class);
