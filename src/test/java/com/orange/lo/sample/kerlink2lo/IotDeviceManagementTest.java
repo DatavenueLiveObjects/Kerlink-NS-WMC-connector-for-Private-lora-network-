@@ -10,11 +10,12 @@ import com.orange.lo.sample.kerlink2lo.lo.LoDeviceProvider;
 import com.orange.lo.sample.kerlink2lo.lo.LoProperties;
 import com.orange.lo.sdk.rest.model.Device;
 import org.assertj.core.util.Lists;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
@@ -29,7 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class IotDeviceManagementTest {
 
     public static final String KER_ACCOUNT = "kerAccount";
@@ -52,7 +53,7 @@ public class IotDeviceManagementTest {
     private Map<String, KerlinkApi> kerlinkApiMap;
     private KerlinkPropertiesList kerlinkPropertiesList;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         loDeviceCache = new LoDeviceCache();
         kerlinkApiMap = new HashMap<>();

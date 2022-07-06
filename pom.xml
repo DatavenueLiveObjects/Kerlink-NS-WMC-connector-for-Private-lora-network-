@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.4.3</version>
+		<version>2.7.1</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.orange.lo.sample</groupId>
@@ -51,7 +51,7 @@
 		<dependency>
 		    <groupId>org.apache.maven</groupId>
 		    <artifactId>maven-model</artifactId>
-		    <version>3.8.3</version>
+		    <version>3.8.6</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
@@ -65,18 +65,18 @@
 		<dependency>
 			<groupId>net.jodah</groupId>
 			<artifactId>failsafe</artifactId>
-			<version>2.4.0</version>
+			<version>2.4.4</version>
 		</dependency>
 		<dependency>
 			<groupId>com.tngtech.archunit</groupId>
 			<artifactId>archunit</artifactId>
-			<version>0.14.1</version>
+			<version>0.23.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.tngtech.archunit</groupId>
-			<artifactId>archunit-junit4</artifactId>
-			<version>0.14.1</version>
+			<artifactId>archunit-junit5</artifactId>
+			<version>0.23.1</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -155,7 +155,7 @@
 							</platforms>
 							<programs>
 								<program>
-									<mainClass>com.orange.lo.sample.kerlink2lo.Kerlink2LoApplication</mainClass>
+									<mainClass>com.orange.lo.sample.kerlink2lo.ConnectorApplication</mainClass>
 									<id>app</id>
 								</program>
 							</programs>

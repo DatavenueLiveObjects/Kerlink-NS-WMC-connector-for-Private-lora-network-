@@ -2,12 +2,12 @@ package com.orange.lo.sample.kerlink2lo.kerlink;
 
 import com.orange.lo.sample.kerlink2lo.kerlink.model.*;
 import org.assertj.core.util.Lists;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.client.RestClientException;
@@ -20,12 +20,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class KerlinkApiTest {
 
     public static final String TOKEN = "abcdef";
@@ -34,7 +33,7 @@ public class KerlinkApiTest {
 
     private KerlinkApi kerlinkApi;
 
-    @Before
+    @BeforeEach
     public void setUp() {
 
         ResponseEntity<JwtDto> loginResponse = getLoginResponse(TOKEN);
@@ -63,7 +62,7 @@ public class KerlinkApiTest {
         List<EndDeviceDto> endDevices = kerlinkApi.getEndDevices();
 
         // then
-        Assert.assertEquals(deviceAmount, endDevices.size());
+        Assertions.assertEquals(deviceAmount, endDevices.size());
     }
 
     @Test
@@ -86,7 +85,7 @@ public class KerlinkApiTest {
         List<EndDeviceDto> endDevices = kerlinkApi.getEndDevices();
 
         // then
-        Assert.assertEquals(15, endDevices.size());
+        Assertions.assertEquals(15, endDevices.size());
     }
 
     @Test
@@ -104,7 +103,7 @@ public class KerlinkApiTest {
         Optional<String> command = kerlinkApi.sendCommand(dataDownDto);
 
         // then
-        assertEquals(commandId, command.get());
+        Assertions.assertEquals(commandId, command.get());
     }
 
     private HttpEntity<DataDownDto> getSendCommandHttpEntity(String token, DataDownDto dataDownDto) {

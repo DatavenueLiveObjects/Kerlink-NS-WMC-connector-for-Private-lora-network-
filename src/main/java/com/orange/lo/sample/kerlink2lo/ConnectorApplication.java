@@ -11,9 +11,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class Kerlink2LoApplication {
+public class ConnectorApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(Kerlink2LoApplication.class, args);
+        SpringApplication.run(ConnectorApplication.class, args);
     }
 }
