@@ -9,7 +9,7 @@
 	</parent>
 	<groupId>com.orange.lo.sample</groupId>
 	<artifactId>kerlink2lo</artifactId>
-	<version>1.0.4</version>
+	<version>1.0.5-SNAPSHOT</version>
 	<name>kerlink2lo</name>
 	<description>Connector between kerlink and live object</description>
 
@@ -100,7 +100,7 @@
 		<url>https://github.com/DatavenueLiveObjects/Kerlink-NS-WMC-connector-for-Private-lora-network-.git</url>
 		<connection>scm:git:${project.scm.url}</connection>
 		<developerConnection>scm:git:${project.scm.url}</developerConnection>
-		<tag>v1.0.4</tag>
+		<tag>v1.0</tag>
 	</scm>
 
 	<profiles>
