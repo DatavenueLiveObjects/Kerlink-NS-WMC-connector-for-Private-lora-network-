@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 
 class LoApiExternalConnectorServiceTest {
 
-    public static final String EXPECTED_DECODED_PAYLOAD = "15;25";
+    public static final String EXPECTED_PAYLOAD = "MTU7MjU=";
     public static final String KERLINK_ACCOUNT_NAME = "acc";
     private static final String KERLINK_DEVICE_ID = "deviceId";
     private static final String NODE_ID = "node";
@@ -60,7 +60,7 @@ class LoApiExternalConnectorServiceTest {
 
         Mockito.verify(dataManagementExtConnector).sendMessage(Mockito.anyString(), dataMessageArgumentCaptor.capture());
         assertTrue(dataMessageArgumentCaptor.getValue().getValue() instanceof Value);
-        assertEquals(EXPECTED_DECODED_PAYLOAD, ((Value) dataMessageArgumentCaptor.getValue().getValue()).getPayload());
+        assertEquals(EXPECTED_PAYLOAD, ((Value) dataMessageArgumentCaptor.getValue().getValue()).getPayload());
     }
 
     @Test
