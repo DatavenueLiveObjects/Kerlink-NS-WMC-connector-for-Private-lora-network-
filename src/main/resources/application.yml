@@ -33,3 +33,15 @@ kerlink-list:
     password: _kerlink_password
     page-size: 20
     kerlink-account-name: _kerlink_account_name
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info, health, metrics, beans, counters
+  endpoint:
+    health:
+      show-details: ALWAYS
+  health:
+    defaults:
+      enabled: false

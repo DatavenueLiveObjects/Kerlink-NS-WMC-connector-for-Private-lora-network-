@@ -10,6 +10,8 @@ package com.orange.lo.sample.kerlink2lo;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
 import com.orange.lo.sample.kerlink2lo.lo.LoApiExternalConnectorService;
+import com.orange.lo.sample.kerlink2lo.utils.Counters;
+import io.micrometer.core.instrument.Counter;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,14 +34,18 @@ public class Kerlink2LoController {
     private static final String KERLINK_ACCOUNT_HEADER = "Kerlink-Account";
 
     private final LoApiExternalConnectorService externalConnectorService;
+    private final Counters counters;
 
-    public Kerlink2LoController(LoApiExternalConnectorService externalConnectorService) {
+    public Kerlink2LoController(LoApiExternalConnectorService externalConnectorService, Counters counters) {
         this.externalConnectorService = externalConnectorService;
+        this.counters = counters;
     }
 
     @PostMapping("/dataUp")
     public Callable<ResponseEntity<Void>> dataUp(@RequestBody DataUpDto dataUpDto, @RequestHeader HttpHeaders headers) {
         Optional<String> kerlinkAccountName = getKerlinkAccountName(headers);
+        incrementReadAndAttemptsCounters();
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("KerlinkAccountName {}", StringEscapeUtils.escapeHtml4(kerlinkAccountName.orElse("")));
             LOG.debug("received {}", StringEscapeUtils.escapeHtml4(dataUpDto.toString()));
@@ -51,9 +57,25 @@ public class Kerlink2LoController {
                 return ResponseEntity.ok().build();
             } else {
                 LOG.debug("Unknown KerlinkAccountName {}", StringEscapeUtils.escapeHtml4(kerlinkAccountName.orElse("")));
+                incrementFailureCounters();
+
                 return ResponseEntity.notFound().build();
             }
         };
+    }
+
+    private void incrementReadAndAttemptsCounters() {
+        Counter messageSentAttemptCounter = counters.getMessageSentAttemptCounter();
+        messageSentAttemptCounter.increment();
+        Counter messageReadCounter = counters.getMessageReadCounter();
+        messageReadCounter.increment();
+    }
+
+    private void incrementFailureCounters() {
+        Counter messageSentAttemptFailedCounter = counters.getMessageSentAttemptFailedCounter();
+        messageSentAttemptFailedCounter.increment();
+        Counter messageSentFailedCounter = counters.getMessageSentFailedCounter();
+        messageSentFailedCounter.increment();
     }
 
     @PostMapping("/dataDownEvent")

@@ -4,14 +4,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
 import com.orange.lo.sample.kerlink2lo.lo.CommandMapper.LoCommand;
+import com.orange.lo.sample.kerlink2lo.utils.Counters;
 import com.orange.lo.sdk.externalconnector.DataManagementExtConnector;
 import com.orange.lo.sdk.externalconnector.model.DataMessage;
 import com.orange.lo.sdk.externalconnector.model.Value;
 import com.orange.lo.sdk.mqtt.exceptions.LoMqttException;
+import io.micrometer.core.instrument.Counter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClientException;
 
 import java.io.File;
@@ -23,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class LoApiExternalConnectorServiceTest {
 
     public static final String EXPECTED_PAYLOAD = "MTU7MjU=";
@@ -30,37 +36,46 @@ class LoApiExternalConnectorServiceTest {
     private static final String KERLINK_DEVICE_ID = "deviceId";
     private static final String NODE_ID = "node";
     private static final String COMMAND_ID = "command";
+    @Mock
     private DataManagementExtConnector dataManagementExtConnector;
     private LoApiExternalConnectorService loApiExternalConnectorService;
+    @Mock
     private LoDeviceProvider loDeviceProvider;
+    @Mock
     private CommandMapper commandMapper;
+    @Mock
+    private Counters counters;
+    @Mock
+    private Counter messageSentCounter = Mockito.mock(Counter.class);
+
+
 
     @BeforeEach
     private void setUp() {
-        dataManagementExtConnector = Mockito.mock(DataManagementExtConnector.class);
-        loDeviceProvider = Mockito.mock(LoDeviceProvider.class);
         LoDeviceCache deviceCache
                 = Mockito.mock(LoDeviceCache.class);
         LoProperties loProperties = Mockito.mock(LoProperties.class);
-        commandMapper = Mockito.mock(CommandMapper.class);
         loApiExternalConnectorService = new LoApiExternalConnectorService(
                 deviceCache,
                 loDeviceProvider,
                 dataManagementExtConnector,
                 loProperties,
-                commandMapper );
+                commandMapper,
+                counters);
     }
 
     @Test
     void sendMessageWithCorrectDataWorks() throws IOException {
         DataUpDto dataUpDto = buildExampleDataUpDto();
         ArgumentCaptor<DataMessage> dataMessageArgumentCaptor = ArgumentCaptor.forClass(DataMessage.class);
+        when(counters.getMessageSentCounter()).thenReturn(messageSentCounter);
 
         loApiExternalConnectorService.sendMessage(dataUpDto, KERLINK_ACCOUNT_NAME);
 
         Mockito.verify(dataManagementExtConnector).sendMessage(Mockito.anyString(), dataMessageArgumentCaptor.capture());
         assertTrue(dataMessageArgumentCaptor.getValue().getValue() instanceof Value);
         assertEquals(EXPECTED_PAYLOAD, ((Value) dataMessageArgumentCaptor.getValue().getValue()).getPayload());
+        Mockito.verify(messageSentCounter, times(1)).increment();
     }
 
     @Test

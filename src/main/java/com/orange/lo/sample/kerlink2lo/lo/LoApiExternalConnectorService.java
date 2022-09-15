@@ -10,10 +10,12 @@ package com.orange.lo.sample.kerlink2lo.lo;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataDownEventDto;
 import com.orange.lo.sample.kerlink2lo.kerlink.model.DataUpDto;
 import com.orange.lo.sample.kerlink2lo.lo.CommandMapper.LoCommand;
+import com.orange.lo.sample.kerlink2lo.utils.Counters;
 import com.orange.lo.sdk.externalconnector.DataManagementExtConnector;
 import com.orange.lo.sdk.externalconnector.model.*;
 import com.orange.lo.sdk.externalconnector.model.NodeStatus.Capabilities;
 import com.orange.lo.sdk.externalconnector.model.NodeStatus.Command;
+import io.micrometer.core.instrument.Counter;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.Policy;
 import net.jodah.failsafe.RetryPolicy;
@@ -36,18 +38,21 @@ public class LoApiExternalConnectorService {
     private final Policy<Void> statusRetryPolicy;
     private final CommandMapper commandMapper;
     private final DataManagementExtConnector dataManagementExtConnector;
+    private final Counters counters;
 
     public LoApiExternalConnectorService(LoDeviceCache deviceCache,
                                          LoDeviceProvider loDeviceProvider,
                                          DataManagementExtConnector dataManagementExtConnector,
                                          LoProperties loProperties,
-                                         CommandMapper commandMapper) {
+                                         CommandMapper commandMapper,
+                                         Counters counters) {
         this.deviceCache = deviceCache;
         this.loDeviceProvider = loDeviceProvider;
         this.dataManagementExtConnector = dataManagementExtConnector;
         this.loProperties = loProperties;
         this.commandMapper = commandMapper;
         this.statusRetryPolicy = new RetryPolicy<>();
+        this.counters = counters;
     }
 
     @PostConstruct
@@ -70,7 +75,25 @@ public class LoApiExternalConnectorService {
         }
 
         LOG.debug("Sending message to device {} on account {}", deviceId, kerlinkAccountName);
-        dataManagementExtConnector.sendMessage(deviceId, dataMessage);
+        try {
+            dataManagementExtConnector.sendMessage(deviceId, dataMessage);
+            incrementSuccessCounters();
+        } catch (Exception e) {
+            incrementFailureCounters();
+            throw e;
+        }
+    }
+
+    private void incrementFailureCounters() {
+        Counter messageSentAttemptFailedCounter = counters.getMessageSentAttemptFailedCounter();
+        messageSentAttemptFailedCounter.increment();
+        Counter messageSentFailedCounter = counters.getMessageSentFailedCounter();
+        messageSentFailedCounter.increment();
+    }
+
+    private void incrementSuccessCounters() {
+        Counter messageSentCounter = counters.getMessageSentCounter();
+        messageSentCounter.increment();
     }
 
     public void sendCommandResponse(DataDownEventDto dataDownEventDto) {
