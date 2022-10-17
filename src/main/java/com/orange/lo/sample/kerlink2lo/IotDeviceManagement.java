@@ -22,12 +22,15 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @EnableScheduling
 @Component
@@ -86,22 +89,25 @@ public class IotDeviceManagement {
                 if (devicesToAddToLo.size() + devicesToRemoveFromLo.size() > 0) {
                     ThreadPoolExecutor synchronizingExecutor = new ThreadPoolExecutor(SYNCHRONIZATION_THREAD_POOL_SIZE, SYNCHRONIZATION_THREAD_POOL_SIZE, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<>(devicesToAddToLo.size() + devicesToRemoveFromLo.size()));
 
-                    for (String deviceId : devicesToAddToLo) {
-                        synchronizingExecutor.execute(() -> {
-                            externalConnectorService.createDevice(deviceId, kerlinkAccountName);
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("Device created for {}", StringEscapeUtils.escapeHtml4(deviceId));
-                            }
-                        });
-                    }
-                    for (String deviceId : devicesToRemoveFromLo) {
-                        synchronizingExecutor.execute(() -> {
-                            externalConnectorService.deleteDevice(deviceId);
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("Device deleted for {}", StringEscapeUtils.escapeHtml4(deviceId));
-                            }
-                        });
-                    }
+                    List<Callable<Void>> createTasks = devicesToAddToLo.stream().map(deviceId -> (Callable<Void>) () -> {
+                    	externalConnectorService.createDevice(deviceId, kerlinkAccountName);
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Device created for {}", StringEscapeUtils.escapeHtml4(deviceId));
+                        }
+                        return null;
+                    }).collect(Collectors.toList());
+                    
+                    List<Callable<Void>> deleteTasks = devicesToRemoveFromLo.stream().map(deviceId -> (Callable<Void>) () -> {
+                    	externalConnectorService.deleteDevice(deviceId);
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Device deleted for {}", StringEscapeUtils.escapeHtml4(deviceId));
+                        }
+                        return null;
+                    }).collect(Collectors.toList());
+                    
+                    List<Callable<Void>> tasks = Stream.concat(createTasks.stream(), deleteTasks.stream()).collect(Collectors.toList());
+                    synchronizingExecutor.invokeAll(tasks);
+                    synchronizingExecutor.shutdown();
                 }
             } catch (HttpClientErrorException e) {
                 LOG.error("Error in device synchronization process \n{}", e.getResponseBodyAsString());
