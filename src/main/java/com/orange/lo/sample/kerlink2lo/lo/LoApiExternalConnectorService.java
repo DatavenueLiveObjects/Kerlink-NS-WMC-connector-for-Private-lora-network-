@@ -66,8 +66,7 @@ public class LoApiExternalConnectorService {
             createDevice(deviceId, kerlinkAccountName);
         }
         DataMessage dataMessage = new DataMessage();
-        Value value = new Value(dataUpDto.getPayload());
-        dataMessage.setValue(value);
+        dataMessage.setValue(dataUpDto);
 
         String connectorDecoder = loProperties.getMessageDecoder();
         if(connectorDecoder != null && !connectorDecoder.isEmpty()) {

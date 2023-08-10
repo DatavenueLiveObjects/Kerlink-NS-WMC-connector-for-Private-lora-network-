@@ -64,6 +64,19 @@ public class Kerlink2LoController {
         };
     }
 
+    @PostMapping("/dataDownEvent")
+    public Callable<ResponseEntity<Void>> dataDown(@RequestBody DataDownEventDto dataDownEventDto, @RequestHeader HttpHeaders headers) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("received command response {}", StringEscapeUtils.escapeJava(dataDownEventDto.toString()));
+        }
+        return () -> {
+            if ("OK".equals(dataDownEventDto.getStatus())) {
+                externalConnectorService.sendCommandResponse(dataDownEventDto);
+            }
+            return ResponseEntity.ok().build();
+        };
+    }
+
     private void incrementReadAndAttemptsCounters() {
         Counter messageSentAttemptCounter = counters.getMessageSentAttemptCounter();
         messageSentAttemptCounter.increment();
@@ -76,19 +89,6 @@ public class Kerlink2LoController {
         messageSentAttemptFailedCounter.increment();
         Counter messageSentFailedCounter = counters.getMessageSentFailedCounter();
         messageSentFailedCounter.increment();
-    }
-
-    @PostMapping("/dataDownEvent")
-    public Callable<ResponseEntity<Void>> dataDown(@RequestBody DataDownEventDto dataDownEventDto, @RequestHeader HttpHeaders headers) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("received command response {}", StringEscapeUtils.escapeJava(dataDownEventDto.toString()));
-        }
-        return () -> {
-            if ("OK".equals(dataDownEventDto.getStatus())) {
-                externalConnectorService.sendCommandResponse(dataDownEventDto);
-            }
-            return ResponseEntity.ok().build();
-        };
     }
 
     private Optional<String> getKerlinkAccountName(HttpHeaders headers) {

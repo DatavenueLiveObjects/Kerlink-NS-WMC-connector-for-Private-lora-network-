@@ -73,8 +73,8 @@ class LoApiExternalConnectorServiceTest {
         loApiExternalConnectorService.sendMessage(dataUpDto, KERLINK_ACCOUNT_NAME);
 
         Mockito.verify(dataManagementExtConnector).sendMessage(Mockito.anyString(), dataMessageArgumentCaptor.capture());
-        assertTrue(dataMessageArgumentCaptor.getValue().getValue() instanceof Value);
-        assertEquals(EXPECTED_PAYLOAD, ((Value) dataMessageArgumentCaptor.getValue().getValue()).getPayload());
+        assertTrue(dataMessageArgumentCaptor.getValue().getValue() instanceof DataUpDto);
+        assertEquals(EXPECTED_PAYLOAD, ((DataUpDto) dataMessageArgumentCaptor.getValue().getValue()).getPayload());
         Mockito.verify(messageSentCounter, times(1)).increment();
     }
 
