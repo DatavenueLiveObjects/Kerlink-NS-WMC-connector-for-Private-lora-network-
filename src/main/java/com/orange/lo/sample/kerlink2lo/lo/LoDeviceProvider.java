@@ -27,6 +27,7 @@ import javax.annotation.PostConstruct;
 import java.lang.invoke.MethodHandles;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.orange.lo.sdk.rest.devicemanagement.Groups.DEFAULT_GROUP_ID;
 
@@ -67,23 +68,60 @@ public class LoDeviceProvider {
     public List<Device> getDevices(String groupName) {
         List<Device> devices = new ArrayList<>(pageSize);
         Inventory inventory = deviceManagement.getInventory();
-        Group group = groupCache.get(groupName);
-        String groupIdOrDefault = group != null ? group.getId() : DEFAULT_GROUP_ID;
-        for (int offset = 0; ; offset++) {
-            GetDevicesFilter devicesFilter = new GetDevicesFilter()
-                    .withGroupId(groupIdOrDefault)
-                    .withLimit(pageSize)
-                    .withOffset(offset * pageSize);
-            List<Device> loDevices = Failsafe.with(deviceListRetryPolicy)
-                    .get(() -> inventory.getDevices(devicesFilter));
-            LOG.trace("Got {} devices", loDevices.size());
-            devices.addAll(loDevices);
-            if (loDevices.size() < pageSize) {
-                break;
+
+        List<String> deviceGroups = getGroupWithSubgroups(groupName);
+        deviceGroups.forEach(groupId -> {
+            List<Device> partDevices = new ArrayList<>();
+            GetDevicesFilter devicesFilter = new GetDevicesFilter().withGroupId(groupId).withLimit(pageSize);
+            while (true) {
+                if (!partDevices.isEmpty()) {
+                    devicesFilter.withBookmarkId(partDevices.get(partDevices.size() - 1).getId());
+                }
+                List<Device> loDevices = Failsafe.with(deviceListRetryPolicy)
+                        .get(() -> inventory.getDevices(devicesFilter));
+                LOG.trace("Got {} devices", loDevices.size());
+                partDevices.addAll(loDevices);
+                if (loDevices.size() < pageSize) {
+                    devices.addAll(partDevices);
+                    break;
+                }
             }
-        }
+        });
         LOG.trace("Devices: {}", devices);
         return devices;
+    }
+
+    private List<String> getGroupWithSubgroups(String groupName) {
+        String mainGroupId = getMainDeviceGroupId(groupName);
+        List<String> subgroupsIds = getSubgroupsIds(mainGroupId, groupCache);
+
+        Stream<String> mainGroupIdStream = Stream.of(mainGroupId);
+        Stream<String> subgroupsIdsStream = subgroupsIds.stream();
+        return Stream.concat(mainGroupIdStream, subgroupsIdsStream)
+                .collect(Collectors.toList());
+    }
+
+    private String getMainDeviceGroupId(String groupName) {
+        Optional<Group> group = Optional.ofNullable(groupCache.get(groupName));
+        if(!group.isPresent()) {
+            LOG.info("Group {} not found, all devices will be synchronized.", groupName);
+        }
+        return group.map(Group::getId).orElse(DEFAULT_GROUP_ID);
+    }
+
+    private List<String> getSubgroupsIds(String parentId, GroupCache groupsCache) {
+        List<String> groupsIds = new ArrayList<>();
+        List<Group> values = new ArrayList<>(groupsCache.getAll());
+        for (Group currentGroup : values) {
+            String parentIdOfCurrentGroup = currentGroup.getParentId();
+            if (parentIdOfCurrentGroup != null && parentIdOfCurrentGroup.equalsIgnoreCase(parentId)) {
+                String currentGroupId = currentGroup.getId();
+                groupsIds.add(currentGroupId);
+                List<String> subgroupsOfGivenGroup = getSubgroupsIds(currentGroupId, groupsCache);
+                groupsIds.addAll(subgroupsOfGivenGroup);
+            }
+        }
+        return groupsIds;
     }
 
     public void addDevice(String deviceId, String kerlinkAccountName) {

@@ -101,7 +101,7 @@ public class Kerlink2LoController {
 
     @ExceptionHandler(HttpClientErrorException.class)
     public ResponseEntity<String> handleIOException(HttpClientErrorException ex, HttpServletRequest request) {
-        LOG.error("Error while processing call {}, \n{}", request.getRequestURI(), ex.getResponseBodyAsString());
+        LOG.error("Error while processing call {}, \n{}, \n {}", request.getRequestURI(), ex.getResponseBodyAsString(), ex.getStackTrace());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getResponseBodyAsString());
     }
 

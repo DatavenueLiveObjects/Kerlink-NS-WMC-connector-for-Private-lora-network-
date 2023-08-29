@@ -9,6 +9,7 @@ package com.orange.lo.sample.kerlink2lo.lo;
 
 import com.orange.lo.sdk.rest.model.Group;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,5 +26,9 @@ public class GroupCache {
 
     public void putAll(Map<String, Group> groups) {
         backingMap.putAll(groups);
+    }
+
+    public Collection<Group> getAll() {
+        return backingMap.values();
     }
 }

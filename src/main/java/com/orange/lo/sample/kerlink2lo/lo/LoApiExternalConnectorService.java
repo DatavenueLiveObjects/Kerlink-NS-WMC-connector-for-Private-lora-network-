@@ -61,20 +61,21 @@ public class LoApiExternalConnectorService {
     }
 
     public void sendMessage(DataUpDto dataUpDto, String kerlinkAccountName) {
-        String deviceId = dataUpDto.getEndDevice().getDevEui();
-        if (!deviceCache.contains(deviceId)) {
-            createDevice(deviceId, kerlinkAccountName);
-        }
-        DataMessage dataMessage = new DataMessage();
-        dataMessage.setValue(dataUpDto);
-
-        String connectorDecoder = loProperties.getMessageDecoder();
-        if(connectorDecoder != null && !connectorDecoder.isEmpty()) {
-            dataMessage.setMetadata(new Metadata(connectorDecoder));
-        }
-
-        LOG.debug("Sending message to device {} on account {}", deviceId, kerlinkAccountName);
         try {
+            String deviceId = dataUpDto.getEndDevice().getDevEui();
+            if (!deviceCache.contains(deviceId)) {
+                createDevice(deviceId, kerlinkAccountName);
+            }
+            DataMessage dataMessage = new DataMessage();
+            dataMessage.setValue(dataUpDto);
+
+            String connectorDecoder = loProperties.getMessageDecoder();
+            if (connectorDecoder != null && !connectorDecoder.isEmpty()) {
+                dataMessage.setMetadata(new Metadata(connectorDecoder));
+            }
+
+            LOG.debug("Sending message to device {} on account {}", deviceId, kerlinkAccountName);
+
             dataManagementExtConnector.sendMessage(deviceId, dataMessage);
             incrementSuccessCounters();
         } catch (Exception e) {
