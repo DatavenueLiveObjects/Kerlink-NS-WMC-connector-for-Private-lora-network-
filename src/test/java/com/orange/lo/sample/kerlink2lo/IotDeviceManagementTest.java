@@ -14,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -129,6 +128,31 @@ public class IotDeviceManagementTest {
         // then
         verify(externalConnectorService, times(0)).createDevice(any(), eq(GROUP_NAME));
         verify(externalConnectorService, times(3)).deleteDevice(any());
+    }
+
+    @Test
+    public void shouldSendStatusDevices() throws InterruptedException {
+        List<EndDeviceDto> kerlinkDevicesList = getKerlinkDevicesList(4);
+        List<Device> loDevicesList = getLoDevicesList(4);
+
+        when(kerlinkApi.getEndDevices()).thenReturn(kerlinkDevicesList);
+        when(loDeviceProvider.getDevices(GROUP_NAME)).thenReturn(loDevicesList);
+
+        CountDownLatch countDownLatch = new CountDownLatch(4);
+
+        doAnswer(invocation -> {
+            countDownLatch.countDown();
+            return null;
+        }).when(externalConnectorService).sendDeviceStatus(any());
+
+        // when
+        iotDeviceManagement.synchronizeDevices();
+        countDownLatch.await(10, TimeUnit.SECONDS);
+
+        // then
+        verify(externalConnectorService, times(0)).createDevice(any(), eq(GROUP_NAME));
+        verify(externalConnectorService, times(0)).deleteDevice(any());
+        verify(externalConnectorService, times(4)).sendDeviceStatus(any());
     }
 
     private List<Device> getLoDevicesList(int amount) {

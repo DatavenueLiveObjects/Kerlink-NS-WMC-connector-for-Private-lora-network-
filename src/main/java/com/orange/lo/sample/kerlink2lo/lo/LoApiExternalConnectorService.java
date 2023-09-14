@@ -112,10 +112,10 @@ public class LoApiExternalConnectorService {
 
     public void createDevice(String kerlinkDeviceId, String kerlinkAccountName) {
         loDeviceProvider.addDevice(kerlinkDeviceId, kerlinkAccountName);
-        setDeviceStatus(kerlinkDeviceId);
+        sendDeviceStatus(kerlinkDeviceId);
     }
 
-    public void setDeviceStatus(String kerlinkDeviceId) {
+    public void sendDeviceStatus(String kerlinkDeviceId) {
         NodeStatus nodeStatus = new NodeStatus();
         nodeStatus.setStatus(Status.ONLINE);
         Capabilities capabilities = new Capabilities();

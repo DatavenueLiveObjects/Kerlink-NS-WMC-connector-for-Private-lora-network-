@@ -86,41 +86,42 @@ public class IotDeviceManagement {
                 devicesToRemoveFromLo.removeAll(kerlinkIds.stream().map(kerlinkId -> devicePrefix + kerlinkId).collect(Collectors.toSet()));
                 LOG.debug("Devices to remove from LO: {}", devicesToRemoveFromLo);
 
-                // update device status to LO
+                // set device status to LO
                 Set<String> devicesToSetStatus = new HashSet<>(kerlinkIds);
                 devicesToSetStatus.retainAll(loIdsWithoutPrefix);
                 devicesToAddToLo.removeAll(loIdsWithoutPrefix);
-                LOG.debug("Devices to update status to LO: {}", devicesToSetStatus);
+                LOG.debug("Devices to set status to LO: {}", devicesToSetStatus);
 
-                if (devicesToAddToLo.size() + devicesToRemoveFromLo.size() > 0 || !devicesToSetStatus.isEmpty()) {
+                if (devicesToAddToLo.size() + devicesToRemoveFromLo.size() + devicesToSetStatus.size() > 0) {
                     ThreadPoolExecutor synchronizingExecutor = new ThreadPoolExecutor(SYNCHRONIZATION_THREAD_POOL_SIZE, SYNCHRONIZATION_THREAD_POOL_SIZE, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<>(devicesToAddToLo.size() + devicesToRemoveFromLo.size() + devicesToSetStatus.size()));
 
-                    List<Callable<Void>> createTasks = devicesToAddToLo.stream().map(deviceId -> (Callable<Void>) () -> {
+                    Stream<Callable<Void>> createTasks = devicesToAddToLo.stream().map(deviceId -> () -> {
                     	externalConnectorService.createDevice(deviceId, kerlinkAccountName);
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Device created for {}", StringEscapeUtils.escapeHtml4(deviceId));
                         }
                         return null;
-                    }).collect(Collectors.toList());
-                    
-                    List<Callable<Void>> deleteTasks = devicesToRemoveFromLo.stream().map(deviceId -> (Callable<Void>) () -> {
+                    });
+
+                    Stream<Callable<Void>> deleteTasks = devicesToRemoveFromLo.stream().map(deviceId -> () -> {
                     	externalConnectorService.deleteDevice(deviceId);
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Device deleted for {}", StringEscapeUtils.escapeHtml4(deviceId));
                         }
                         return null;
-                    }).collect(Collectors.toList());
+                    });
 
-                    List<Callable<Void>> updateTasks = devicesToSetStatus.stream().map(deviceId -> (Callable<Void>) () -> {
-                        externalConnectorService.setDeviceStatus(deviceId);
+                    Stream<Callable<Void>> updateTasks = devicesToSetStatus.stream().map(deviceId -> () -> {
+                        externalConnectorService.sendDeviceStatus(deviceId);
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Device status updated for {}", StringEscapeUtils.escapeHtml4(deviceId));
                         }
                         return null;
-                    }).collect(Collectors.toList());
+                    });
 
 
-                    List<Callable<Void>> tasks = Stream.concat(Stream.concat(createTasks.stream(), deleteTasks.stream()), updateTasks.stream()).collect(Collectors.toList());
+                    List<Callable<Void>> tasks = Stream.concat(Stream.concat(createTasks, deleteTasks), updateTasks)
+                            .collect(Collectors.toList());
                     synchronizingExecutor.invokeAll(tasks);
                     synchronizingExecutor.shutdown();
                 }
