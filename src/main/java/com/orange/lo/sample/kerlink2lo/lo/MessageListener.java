@@ -23,9 +23,11 @@ public class MessageListener implements DataManagementExtConnectorCommandCallbac
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final String CONTENT_TYPE_TEXT = "TEXT";
+    private static final String CONTENT_TYPE_KEY = "contentType";
+    private static final String DEFAULT_CONTENT_TYPE = "TEXT";
     private static final String F_PORT_KEY = "fPort";
-    private static final String F_PORT_DEFAULT = "1";
+    private static final String DEFAULT_F_PORT = "10";
+    private static final Boolean DEFAULT_CONFIRMED = false;
 
     private final CommandMapper commandMapper;
     private final Map<String, KerlinkApi> kerlinkApiMap;
@@ -41,36 +43,41 @@ public class MessageListener implements DataManagementExtConnectorCommandCallbac
 
     @Override
     public Object onCommandRequest(CommandRequest commandRequest) {
-        // If this throws, the whole thing seems to stop responding to commands
-        // TODO: Exception handling
-        LOG.trace("Got CommandRequest {}", commandRequest);
-        DataDownDto dataDownDto = prepareDataDown(commandRequest);
-
-        String group = deviceCache.getGroup(dataDownDto.getEndDevice().getDevEui());
-        Optional<String> commandId = kerlinkApiMap.get(group)
-                .sendCommand(dataDownDto);
-        if (commandId.isPresent()) {
-            commandMapper.put(commandId.get(), commandRequest.getId(), commandRequest.getNodeId());
-            LOG.trace("Put to commandMapper: kerlinkID = {}, loId = {}, nodeId = {}", commandId, commandRequest.getId(), commandRequest.getNodeId());
+        try {
+            LOG.info("Got CommandRequest {}", commandRequest);
+            DataDownDto dataDownDto = prepareDataDown(commandRequest);
+            String group = deviceCache.getGroup(dataDownDto.getEndDevice().getDevEui());
+            Optional<String> commandId = kerlinkApiMap.get(group)
+                    .sendCommand(dataDownDto);
+            if (commandId.isPresent()) {
+                commandMapper.put(commandId.get(), commandRequest.getId(), commandRequest.getNodeId());
+                LOG.info("Put to commandMapper: kerlinkID = {}, loId = {}, nodeId = {}", commandId, commandRequest.getId(), commandRequest.getNodeId());
+            } else {
+                LOG.info("Command not sent to Kerlink");
+            }
+        } catch (Exception e) {
+            LOG.error("Error while trying to send command to Kerlink platform", e);
+        } finally {
+            // Returning null, because non-null response would indicate a finished command
+            return null;
         }
-
-        // Returning null, because non-null response would indicate a finished command
-        return null;
     }
 
     private DataDownDto prepareDataDown(CommandRequest commandRequest) {
-        DataDownDto dataDownDto = new DataDownDto();
-        dataDownDto.setConfirmed(false);
-        dataDownDto.setContentType(CONTENT_TYPE_TEXT);
+        int fPort = Integer.parseInt(commandRequest.getValue().getArg().getOrDefault(F_PORT_KEY, DEFAULT_F_PORT));
+        String contentType = commandRequest.getValue().getArg().getOrDefault(CONTENT_TYPE_KEY, DEFAULT_CONTENT_TYPE);
+        String payload = commandRequest.getValue().getReq();
 
-        String fPort = commandRequest.getValue().getArg().getOrDefault(F_PORT_KEY, F_PORT_DEFAULT);
-        dataDownDto.setfPort(Integer.parseInt(fPort));
+        DataDownDto dataDownDto = new DataDownDto();
+        dataDownDto.setConfirmed(DEFAULT_CONFIRMED);
+        dataDownDto.setContentType(contentType);
+        dataDownDto.setfPort(fPort);
+        dataDownDto.setPayload(payload);
 
         EndDeviceDto endDeviceDto = new EndDeviceDto();
         endDeviceDto.setDevEui(commandRequest.getNodeId());
 
         dataDownDto.setEndDevice(endDeviceDto);
-        dataDownDto.setPayload(commandRequest.getValue().getReq());
         return dataDownDto;
     }
 }
