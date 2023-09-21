@@ -80,9 +80,14 @@ class MessageListenerTest {
         commandRequest.setNodeId(REQUEST_NODE_ID);
         commandRequest.setId(REQUEST_ID);
 
+        Map<String, String> arg = new HashMap<>();
+        arg.put("payload", COMMAND_REQUEST_VALUE_REQUEST);
+        arg.put("contentType", "TEXT");
+        arg.put("fPort", "10");
+
         CommandRequestValue commandRequestValue = new CommandRequestValue();
         commandRequestValue.setReq(COMMAND_REQUEST_VALUE_REQUEST);
-        commandRequestValue.setArg(Collections.emptyMap());
+        commandRequestValue.setArg(arg);
         commandRequest.setValue(commandRequestValue);
         return commandRequest;
     }
