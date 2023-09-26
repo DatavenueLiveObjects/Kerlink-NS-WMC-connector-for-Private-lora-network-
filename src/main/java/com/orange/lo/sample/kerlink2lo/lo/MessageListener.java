@@ -23,6 +23,7 @@ public class MessageListener implements DataManagementExtConnectorCommandCallbac
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    private static final String PAYLOAD_KEY = "payload";
     private static final String CONTENT_TYPE_KEY = "contentType";
     private static final String DEFAULT_CONTENT_TYPE = "TEXT";
     private static final String F_PORT_KEY = "fPort";
@@ -47,8 +48,7 @@ public class MessageListener implements DataManagementExtConnectorCommandCallbac
             LOG.info("Got CommandRequest {}", commandRequest);
             DataDownDto dataDownDto = prepareDataDown(commandRequest);
             String group = deviceCache.getGroup(dataDownDto.getEndDevice().getDevEui());
-            Optional<String> commandId = kerlinkApiMap.get(group)
-                    .sendCommand(dataDownDto);
+            Optional<String> commandId = kerlinkApiMap.get(group).sendCommand(dataDownDto);
             if (commandId.isPresent()) {
                 commandMapper.put(commandId.get(), commandRequest.getId(), commandRequest.getNodeId());
                 LOG.info("Put to commandMapper: kerlinkID = {}, loId = {}, nodeId = {}", commandId, commandRequest.getId(), commandRequest.getNodeId());
@@ -66,7 +66,11 @@ public class MessageListener implements DataManagementExtConnectorCommandCallbac
     private DataDownDto prepareDataDown(CommandRequest commandRequest) {
         int fPort = Integer.parseInt(commandRequest.getValue().getArg().getOrDefault(F_PORT_KEY, DEFAULT_F_PORT));
         String contentType = commandRequest.getValue().getArg().getOrDefault(CONTENT_TYPE_KEY, DEFAULT_CONTENT_TYPE);
-        String payload = commandRequest.getValue().getReq();
+        String payload = commandRequest.getValue().getArg().get(PAYLOAD_KEY);
+
+        if (payload == null) {
+            throw new IllegalArgumentException("Payload cannot be null");
+        }
 
         DataDownDto dataDownDto = new DataDownDto();
         dataDownDto.setConfirmed(DEFAULT_CONFIRMED);
